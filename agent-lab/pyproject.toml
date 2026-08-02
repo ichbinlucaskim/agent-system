@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-system-lab"
+version = "0.1.0"
+description = "Hands-on labs for learning agent systems with the Claude API"
+readme = "README.md"
+requires-python = ">=3.11"
+
+# Runtime dependencies are deliberately limited to these three. No agent
+# frameworks, no vector databases, no cloud SDKs. Every lab runs locally.
+dependencies = [
+    "anthropic>=0.40",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4"]
+
+[tool.setuptools]
+packages = ["common"]
+
+[tool.pytest.ini_options]
+# Puts the repository root on sys.path so that labs can import common.*
+# without installing the package first.
+pythonpath = ["."]
+testpaths = ["labs"]

@@ -1,0 +1,26 @@
+# Secrets. Never commit a real API key.
+.env
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Tooling
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Lab artifacts. Each lab's data/ directory is tracked via its .gitkeep;
+# only the generated artifacts below are ignored.
+*.sqlite3
+*.db
+
+# OS
+.DS_Store

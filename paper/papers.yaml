@@ -1,0 +1,438 @@
+# papers.yaml is the single source of truth for this library. It is the only
+# file a human edits by hand. README.md, README.ko.md, MANIFEST.md, every
+# topics/*/README*.md, docs/lineage*.md, and docs/lab-mapping.md are generated
+# from this file by scripts/build_index.py and carry a generated marker on
+# line 1.
+#
+# ON THE builds_on, extended_by, AND related FIELDS
+#
+# These three fields are EDITORIAL groupings chosen for study purposes. They
+# record how the papers are arranged for reading in this library. They are NOT
+# a claim of formal citation lineage: no citation graph was consulted, no
+# bibliography was checked, and an edge here does not assert that one paper
+# cites or was influenced by another. Read them as one reader's ordering.
+#
+# `related` specifically means contemporaneous work with no direction of
+# influence asserted in either direction.
+#
+# ON authors AND year
+#
+# These two fields are populated from the arXiv API by scripts/add_paper.py
+# rather than typed by hand. They are seeded empty and filled on ingestion. If
+# you add an entry manually, leave them empty and let the tooling fill them,
+# so that the recorded metadata always matches what arXiv actually returned.
+#
+# Schema per entry, in the order the keys are written:
+#   arxiv_id          bare arXiv id, quoted
+#   slug              lowercase kebab-case short name
+#   title             full paper title
+#   authors           list of strings, filled from the arXiv API
+#   year              integer, filled from the arXiv API
+#   primary_topic     the one topic folder the PDF is stored in
+#   also_relevant_to  other topic folders that link to it, may be empty
+#   tier              core | deep | reference
+#   builds_on         list of arxiv_id strings
+#   extended_by       list of arxiv_id strings
+#   related           list of arxiv_id strings
+#   lab_refs          lab folder names in the sibling lab repository
+#   status            unread | reading | read
+
+papers:
+- arxiv_id: '2201.11903'
+  slug: chain-of-thought
+  title: Chain-of-Thought Prompting Elicits Reasoning in Large Language Models
+  authors:
+  - Jason Wei
+  - Xuezhi Wang
+  - Dale Schuurmans
+  - Maarten Bosma
+  - Brian Ichter
+  - Fei Xia
+  - Ed Chi
+  - Quoc Le
+  - Denny Zhou
+  year: 2022
+  primary_topic: 01-reasoning
+  also_relevant_to: []
+  tier: core
+  builds_on: []
+  extended_by:
+  - '2203.11171'
+  - '2305.10601'
+  - '2210.03629'
+  related: []
+  lab_refs:
+  - 02-prompt-chaining
+  status: unread
+- arxiv_id: '2203.11171'
+  slug: self-consistency
+  title: Self-Consistency Improves Chain of Thought Reasoning in Language Models
+  authors:
+  - Xuezhi Wang
+  - Jason Wei
+  - Dale Schuurmans
+  - Quoc Le
+  - Ed Chi
+  - Sharan Narang
+  - Aakanksha Chowdhery
+  - Denny Zhou
+  year: 2022
+  primary_topic: 01-reasoning
+  also_relevant_to: []
+  tier: deep
+  builds_on:
+  - '2201.11903'
+  extended_by:
+  - '2305.10601'
+  related: []
+  lab_refs:
+  - 04-parallelization
+  status: unread
+- arxiv_id: '2305.10601'
+  slug: tree-of-thoughts
+  title: 'Tree of Thoughts: Deliberate Problem Solving with Large Language Models'
+  authors:
+  - Shunyu Yao
+  - Dian Yu
+  - Jeffrey Zhao
+  - Izhak Shafran
+  - Thomas L. Griffiths
+  - Yuan Cao
+  - Karthik Narasimhan
+  year: 2023
+  primary_topic: 01-reasoning
+  also_relevant_to: []
+  tier: deep
+  builds_on:
+  - '2201.11903'
+  - '2203.11171'
+  extended_by: []
+  related: []
+  lab_refs:
+  - 05-orchestrator-workers
+  status: unread
+- arxiv_id: '2210.03629'
+  slug: react
+  title: 'ReAct: Synergizing Reasoning and Acting in Language Models'
+  authors:
+  - Shunyu Yao
+  - Jeffrey Zhao
+  - Dian Yu
+  - Nan Du
+  - Izhak Shafran
+  - Karthik Narasimhan
+  - Yuan Cao
+  year: 2022
+  primary_topic: 02-acting-and-tools
+  also_relevant_to:
+  - 01-reasoning
+  tier: core
+  builds_on:
+  - '2201.11903'
+  extended_by:
+  - '2302.04761'
+  - '2303.11366'
+  - '2405.15793'
+  - '2305.16291'
+  related: []
+  lab_refs:
+  - 01-augmented-llm
+  - 12-agent-loop
+  status: unread
+- arxiv_id: '2302.04761'
+  slug: toolformer
+  title: 'Toolformer: Language Models Can Teach Themselves to Use Tools'
+  authors:
+  - Timo Schick
+  - Jane Dwivedi-Yu
+  - Roberto Dessì
+  - Roberta Raileanu
+  - Maria Lomeli
+  - Luke Zettlemoyer
+  - Nicola Cancedda
+  - Thomas Scialom
+  year: 2023
+  primary_topic: 02-acting-and-tools
+  also_relevant_to: []
+  tier: deep
+  builds_on:
+  - '2210.03629'
+  extended_by:
+  - '2405.15793'
+  related: []
+  lab_refs:
+  - 07-tool-design-aci
+  status: unread
+- arxiv_id: '2303.11366'
+  slug: reflexion
+  title: 'Reflexion: Language Agents with Verbal Reinforcement Learning'
+  authors:
+  - Noah Shinn
+  - Federico Cassano
+  - Edward Berman
+  - Ashwin Gopinath
+  - Karthik Narasimhan
+  - Shunyu Yao
+  year: 2023
+  primary_topic: 03-self-correction
+  also_relevant_to: []
+  tier: core
+  builds_on:
+  - '2210.03629'
+  extended_by: []
+  related:
+  - '2303.17651'
+  lab_refs:
+  - 06-evaluator-optimizer
+  - 12-agent-loop
+  status: unread
+- arxiv_id: '2303.17651'
+  slug: self-refine
+  title: 'Self-Refine: Iterative Refinement with Self-Feedback'
+  authors:
+  - Aman Madaan
+  - Niket Tandon
+  - Prakhar Gupta
+  - Skyler Hallinan
+  - Luyu Gao
+  - Sarah Wiegreffe
+  - Uri Alon
+  - Nouha Dziri
+  - Shrimai Prabhumoye
+  - Yiming Yang
+  - Shashank Gupta
+  - Bodhisattwa Prasad Majumder
+  - Katherine Hermann
+  - Sean Welleck
+  - Amir Yazdanbakhsh
+  - Peter Clark
+  year: 2023
+  primary_topic: 03-self-correction
+  also_relevant_to: []
+  tier: deep
+  builds_on: []
+  extended_by: []
+  related:
+  - '2303.11366'
+  lab_refs:
+  - 06-evaluator-optimizer
+  status: unread
+- arxiv_id: '2005.11401'
+  slug: rag
+  title: Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks
+  authors:
+  - Patrick Lewis
+  - Ethan Perez
+  - Aleksandra Piktus
+  - Fabio Petroni
+  - Vladimir Karpukhin
+  - Naman Goyal
+  - Heinrich Küttler
+  - Mike Lewis
+  - Wen-tau Yih
+  - Tim Rocktäschel
+  - Sebastian Riedel
+  - Douwe Kiela
+  year: 2020
+  primary_topic: 04-memory-and-retrieval
+  also_relevant_to: []
+  tier: core
+  builds_on: []
+  extended_by:
+  - '2310.08560'
+  related: []
+  lab_refs:
+  - 08-rag-basics
+  - 09-retrieval-quality
+  status: unread
+- arxiv_id: '2310.08560'
+  slug: memgpt
+  title: 'MemGPT: Towards LLMs as Operating Systems'
+  authors:
+  - Charles Packer
+  - Sarah Wooders
+  - Kevin Lin
+  - Vivian Fang
+  - Shishir G. Patil
+  - Ion Stoica
+  - Joseph E. Gonzalez
+  year: 2023
+  primary_topic: 04-memory-and-retrieval
+  also_relevant_to: []
+  tier: deep
+  builds_on:
+  - '2005.11401'
+  extended_by: []
+  related: []
+  lab_refs:
+  - 11-context-memory
+  status: unread
+- arxiv_id: '2304.03442'
+  slug: generative-agents
+  title: 'Generative Agents: Interactive Simulacra of Human Behavior'
+  authors:
+  - Joon Sung Park
+  - Joseph C. O'Brien
+  - Carrie J. Cai
+  - Meredith Ringel Morris
+  - Percy Liang
+  - Michael S. Bernstein
+  year: 2023
+  primary_topic: 05-multi-agent
+  also_relevant_to:
+  - 04-memory-and-retrieval
+  tier: reference
+  builds_on: []
+  extended_by:
+  - '2305.16291'
+  related: []
+  lab_refs:
+  - 11-context-memory
+  - 13-subagents
+  status: unread
+- arxiv_id: '2308.08155'
+  slug: autogen
+  title: 'AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation'
+  authors:
+  - Qingyun Wu
+  - Gagan Bansal
+  - Jieyu Zhang
+  - Yiran Wu
+  - Beibin Li
+  - Erkang Zhu
+  - Li Jiang
+  - Xiaoyun Zhang
+  - Shaokun Zhang
+  - Jiale Liu
+  - Ahmed Hassan Awadallah
+  - Ryen W White
+  - Doug Burger
+  - Chi Wang
+  year: 2023
+  primary_topic: 05-multi-agent
+  also_relevant_to: []
+  tier: reference
+  builds_on: []
+  extended_by: []
+  related: []
+  lab_refs:
+  - 05-orchestrator-workers
+  - 13-subagents
+  status: unread
+- arxiv_id: '2305.16291'
+  slug: voyager
+  title: 'Voyager: An Open-Ended Embodied Agent with Large Language Models'
+  authors:
+  - Guanzhi Wang
+  - Yuqi Xie
+  - Yunfan Jiang
+  - Ajay Mandlekar
+  - Chaowei Xiao
+  - Yuke Zhu
+  - Linxi Fan
+  - Anima Anandkumar
+  year: 2023
+  primary_topic: 06-environment-and-interface
+  also_relevant_to:
+  - 05-multi-agent
+  tier: reference
+  builds_on:
+  - '2210.03629'
+  extended_by: []
+  related: []
+  lab_refs:
+  - 12-agent-loop
+  status: unread
+- arxiv_id: '2405.15793'
+  slug: swe-agent
+  title: 'SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering'
+  authors:
+  - John Yang
+  - Carlos E. Jimenez
+  - Alexander Wettig
+  - Kilian Lieret
+  - Shunyu Yao
+  - Karthik Narasimhan
+  - Ofir Press
+  year: 2024
+  primary_topic: 06-environment-and-interface
+  also_relevant_to:
+  - 02-acting-and-tools
+  tier: deep
+  builds_on:
+  - '2210.03629'
+  - '2310.06770'
+  extended_by: []
+  related: []
+  lab_refs:
+  - 07-tool-design-aci
+  - 18-packaging-deploy
+  status: unread
+- arxiv_id: '2310.06770'
+  slug: swe-bench
+  title: 'SWE-bench: Can Language Models Resolve Real-World GitHub Issues?'
+  authors:
+  - Carlos E. Jimenez
+  - John Yang
+  - Alexander Wettig
+  - Shunyu Yao
+  - Kexin Pei
+  - Ofir Press
+  - Karthik Narasimhan
+  year: 2023
+  primary_topic: 07-evaluation
+  also_relevant_to: []
+  tier: core
+  builds_on: []
+  extended_by:
+  - '2405.15793'
+  related: []
+  lab_refs:
+  - 15-evaluation
+  status: unread
+- arxiv_id: '2307.13854'
+  slug: webarena
+  title: 'WebArena: A Realistic Web Environment for Building Autonomous Agents'
+  authors:
+  - Shuyan Zhou
+  - Frank F. Xu
+  - Hao Zhu
+  - Xuhui Zhou
+  - Robert Lo
+  - Abishek Sridhar
+  - Xianyi Cheng
+  - Tianyue Ou
+  - Yonatan Bisk
+  - Daniel Fried
+  - Uri Alon
+  - Graham Neubig
+  year: 2023
+  primary_topic: 07-evaluation
+  also_relevant_to: []
+  tier: reference
+  builds_on: []
+  extended_by: []
+  related: []
+  lab_refs:
+  - 15-evaluation
+  - 16-observability
+  status: unread
+- arxiv_id: '2406.12045'
+  slug: tau-bench
+  title: 'tau-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains'
+  authors:
+  - Shunyu Yao
+  - Noah Shinn
+  - Pedram Razavi
+  - Karthik Narasimhan
+  year: 2024
+  primary_topic: 07-evaluation
+  also_relevant_to: []
+  tier: deep
+  builds_on: []
+  extended_by: []
+  related: []
+  lab_refs:
+  - 14-human-in-the-loop
+  - 15-evaluation
+  status: unread

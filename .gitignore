@@ -1,0 +1,35 @@
+# Repository-wide ignores. agent-lab/.gitignore stays in place for the
+# artifacts that only the lab course produces, such as local sqlite files.
+
+# Secrets. Never commit a real API key. The only committed example is
+# agent-lab/.env.example, which holds a placeholder.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Tooling
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Editors
+.idea/
+*.swp
+
+# OS
+.DS_Store
+._*
+Thumbs.db

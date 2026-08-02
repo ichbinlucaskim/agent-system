@@ -51,3 +51,32 @@ These are stored under their own primary topic. The PDF lives in exactly one pla
 
 - ReAct: Synergizing Reasoning and Acting in Language Models ([2210.03629](https://arxiv.org/abs/2210.03629), filed under [`02-acting-and-tools`](../02-acting-and-tools/README.md), [PDF](../02-acting-and-tools/pdf/2210.03629-react.pdf))
 
+## What to carry instead of the papers
+
+The papers are variations on three decisions, not three
+techniques to memorize. What is worth carrying is the decision, because a
+paper published next year will be another setting of the same three.
+
+| Approach | What it requires | Budget |
+| --- | --- | --- |
+| One pass with intermediate steps ([2201.11903](https://arxiv.org/abs/2201.11903)) | Nothing beyond room to emit the steps | Roughly one call |
+| Parallel samples plus aggregation ([2203.11171](https://arxiv.org/abs/2203.11171)) | Answers that can be compared for equality | N times |
+| Search over branches ([2305.10601](https://arxiv.org/abs/2305.10601)) | A state evaluator good enough to prune on | Many times over |
+
+Three questions decide the row, and they are the thing to ask when a new
+task arrives.
+
+1. **Can the answer be checked automatically?** If yes, parallel sampling
+   with a verifier is hard to beat. If no, the entire width-expanding
+   family drops out, because there is nothing to aggregate over and
+   nothing to prune on.
+2. **Do failures come from the plan or from the execution?** Execution
+   failures want tools and grounding, which is `02-acting-and-tools`.
+   Planning failures are the ones worth spending a search structure on.
+3. **What cost multiple is allowed?** One, several, or many over is
+   usually what actually decides which row above is available, regardless
+   of which one would perform best.
+
+Placing a new paper is then a matter of finding its cell rather than
+reading it from the beginning.
+

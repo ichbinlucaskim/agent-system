@@ -275,6 +275,65 @@ TAKEAWAYS: dict[str, dict[str, str]] = {
     },
 }
 
+# Optional per-topic closing section. Keyed by topic, rendered after the paper
+# list. This is the one place in a topic README that is an argument rather than
+# an index, so it is kept as literal prose rather than assembled from fields.
+DECISION_FRAMES: dict[str, dict[str, str]] = {
+    "01-reasoning": {
+        "en": """The papers are variations on three decisions, not three
+techniques to memorize. What is worth carrying is the decision, because a
+paper published next year will be another setting of the same three.
+
+| Approach | What it requires | Budget |
+| --- | --- | --- |
+| One pass with intermediate steps ([2201.11903](https://arxiv.org/abs/2201.11903)) | Nothing beyond room to emit the steps | Roughly one call |
+| Parallel samples plus aggregation ([2203.11171](https://arxiv.org/abs/2203.11171)) | Answers that can be compared for equality | N times |
+| Search over branches ([2305.10601](https://arxiv.org/abs/2305.10601)) | A state evaluator good enough to prune on | Many times over |
+
+Three questions decide the row, and they are the thing to ask when a new
+task arrives.
+
+1. **Can the answer be checked automatically?** If yes, parallel sampling
+   with a verifier is hard to beat. If no, the entire width-expanding
+   family drops out, because there is nothing to aggregate over and
+   nothing to prune on.
+2. **Do failures come from the plan or from the execution?** Execution
+   failures want tools and grounding, which is `02-acting-and-tools`.
+   Planning failures are the ones worth spending a search structure on.
+3. **What cost multiple is allowed?** One, several, or many over is
+   usually what actually decides which row above is available, regardless
+   of which one would perform best.
+
+Placing a new paper is then a matter of finding its cell rather than
+reading it from the beginning.""",
+        "ko": """이 논문들은 외워야 할 세 가지 기법이 아니라 세 가지 결정의
+변주입니다. 가지고 다닐 가치가 있는 것은 결정 쪽입니다. 내년에 나올 논문도
+같은 세 가지를 다르게 잡은 것일 테니까요.
+
+| 접근 | 무엇을 요구하는가 | 예산 |
+| --- | --- | --- |
+| 중간 단계를 포함한 한 번의 pass ([2201.11903](https://arxiv.org/abs/2201.11903)) | 단계를 내놓을 여유 외에는 없음 | 대략 한 번의 호출 |
+| 병렬 sampling과 집계 ([2203.11171](https://arxiv.org/abs/2203.11171)) | 동등성을 비교할 수 있는 답 | N배 |
+| 분기에 대한 탐색 ([2305.10601](https://arxiv.org/abs/2305.10601)) | 가지치기를 맡길 만한 state evaluator | 수십 배 |
+
+어느 행을 쓸지는 세 질문이 결정하며, 새 task를 만났을 때 던질 질문이
+그것입니다.
+
+1. **답을 자동으로 검증할 수 있는가.** 가능하면 병렬 sampling과 verifier의
+   조합을 이기기 어렵습니다. 불가능하면 너비를 넓히는 계열 전체가
+   탈락합니다. 집계할 대상도, 가지칠 근거도 없기 때문입니다.
+2. **실패가 계획에서 나는가, 실행에서 나는가.** 실행 실패는 tool과 근거를
+   원하며 그것은 `02-acting-and-tools`입니다. 탐색 구조를 들일 가치가 있는
+   것은 계획 실패 쪽입니다.
+3. **예산 몇 배까지 허용되는가.** 한 배인지, 몇 배인지, 수십 배인지가 어느
+   행이 성능상 가장 좋은지와 무관하게 어느 행을 쓸 수 있는지를 사실상
+   결정합니다.
+
+그러면 새 논문을 놓는 일은 처음부터 읽는 일이 아니라 그것이 들어갈 칸을
+찾는 일이 됩니다.""",
+    },
+}
+
 TIER_NOTE_EN = {
     "core": "core, read first",
     "deep": "deep, read after the core paper in its topic",
@@ -667,6 +726,18 @@ def render_topic_readme(topic: str, papers: list[dict], lang: str) -> str:
             "None." if en else "없습니다."
         )
     lines.append("")
+
+    frame = DECISION_FRAMES.get(topic)
+    if frame:
+        lines.append(
+            "## What to carry instead of the papers"
+            if en
+            else "## 논문 대신 가지고 다닐 것"
+        )
+        lines.append("")
+        lines.append(frame["en" if en else "ko"])
+        lines.append("")
+
     return "\n".join(lines) + "\n"
 
 

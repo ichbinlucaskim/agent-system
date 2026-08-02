@@ -650,6 +650,20 @@ def render_topic_readme(topic: str, papers: list[dict], lang: str) -> str:
     lines.append("")
     lines.append(info["why_en"] if en else info["why_ko"])
     lines.append("")
+
+    # Placed before the index rather than after it: the frame is what the
+    # paper list is meant to be read through, so it has to come first.
+    frame = DECISION_FRAMES.get(topic)
+    if frame:
+        lines.append(
+            "## What to carry instead of the papers"
+            if en
+            else "## 논문 대신 가지고 다닐 것"
+        )
+        lines.append("")
+        lines.append(frame["en" if en else "ko"])
+        lines.append("")
+
     lines.append("## Prerequisite topics" if en else "## 선행 topic")
     lines.append("")
     if info["prereq"]:
@@ -726,18 +740,6 @@ def render_topic_readme(topic: str, papers: list[dict], lang: str) -> str:
             "None." if en else "없습니다."
         )
     lines.append("")
-
-    frame = DECISION_FRAMES.get(topic)
-    if frame:
-        lines.append(
-            "## What to carry instead of the papers"
-            if en
-            else "## 논문 대신 가지고 다닐 것"
-        )
-        lines.append("")
-        lines.append(frame["en" if en else "ko"])
-        lines.append("")
-
     return "\n".join(lines) + "\n"
 
 

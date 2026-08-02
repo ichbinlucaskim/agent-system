@@ -20,7 +20,6 @@ Jason Wei, Xuezhi Wang, Dale Schuurmans 외 (2022)
 - PDF: [`2201.11903-chain-of-thought.pdf`](pdf/2201.11903-chain-of-thought.pdf)
 - Notes: [`2201.11903-chain-of-thought.ko.md`](notes/2201.11903-chain-of-thought.ko.md)
 - Tier: core, 먼저 읽기
-- 상태: unread
 
 중간 단계를 모델이 조용히 처리하는 것이 아니라 출력의 일부로 만드는 전환을 보기 위해 읽습니다.
 
@@ -32,7 +31,6 @@ Xuezhi Wang, Jason Wei, Dale Schuurmans 외 (2022)
 - PDF: [`2203.11171-self-consistency.pdf`](pdf/2203.11171-self-consistency.pdf)
 - Notes: [`2203.11171-self-consistency.ko.md`](notes/2203.11171-self-consistency.ko.md)
 - Tier: deep, 해당 topic의 core 논문 다음에 읽기
-- 상태: unread
 
 reasoning 호출을 sampling과 집계의 관점으로 보는 시각으로 읽고, lab에서 만드는 voting 변형과 비교하세요.
 
@@ -44,7 +42,6 @@ Shunyu Yao, Dian Yu, Jeffrey Zhao 외 (2023)
 - PDF: [`2305.10601-tree-of-thoughts.pdf`](pdf/2305.10601-tree-of-thoughts.pdf)
 - Notes: [`2305.10601-tree-of-thoughts.ko.md`](notes/2305.10601-tree-of-thoughts.ko.md)
 - Tier: deep, 해당 topic의 core 논문 다음에 읽기
-- 상태: unread
 
 reasoning을 한 줄이 아니라 분기에 대한 탐색으로 다룰 때 무엇이 달라지는지 보기 위해 읽습니다.
 

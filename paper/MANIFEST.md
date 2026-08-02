@@ -13,7 +13,7 @@ verified since it was last downloaded.
 
 | File | arXiv id | SHA256 | Bytes | Title match | Metadata match | Verified at |
 | --- | --- | --- | ---: | --- | --- | --- |
-| `topics/01-reasoning/pdf/2201.11903-chain-of-thought.pdf` | 2201.11903 | `7d9f878c23b460e4566aa4ec9201b1abfb3b8faefb2b1356e411cb90fef72a12` | 891773 | yes | yes | 2026-08-01T22:45:26+00:00 |
+| `topics/01-reasoning/pdf/2201.11903-chain-of-thought.pdf` | 2201.11903 | `7d9f878c23b460e4566aa4ec9201b1abfb3b8faefb2b1356e411cb90fef72a12` | 891773 | yes | yes | 2026-08-01T22:50:12+00:00 |
 | `topics/01-reasoning/pdf/2203.11171-self-consistency.pdf` | 2203.11171 | `1a49ce0373afc89d2d6e97fb1aa8230f6b818c70590d732a3187f753f4df6aba` | 10505941 | yes | yes | 2026-08-01T22:45:26+00:00 |
 | `topics/01-reasoning/pdf/2305.10601-tree-of-thoughts.pdf` | 2305.10601 | `79c5237e3f63953a73f2b0d6894327702ee1f7e981450c251bb1b5cb4f8d7b8f` | 799685 | yes | yes | 2026-08-01T22:45:29+00:00 |
 | `topics/02-acting-and-tools/pdf/2210.03629-react.pdf` | 2210.03629 | `f285b0971ae4a790e402fb93966bed3adde2cf0a04977d08b2b40d6ab0cace69` | 633805 | yes | yes | 2026-08-01T22:45:32+00:00 |

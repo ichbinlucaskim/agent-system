@@ -379,8 +379,8 @@ def render_readme(papers: list[dict], lang: str) -> str:
             "",
             "## Papers",
             "",
-            "| Topic | arXiv id | Title | Tier | Status |",
-            "| --- | --- | --- | --- | --- |",
+            "| Topic | arXiv id | Title | Tier |",
+            "| --- | --- | --- | --- |",
         ]
     else:
         lines += [
@@ -420,8 +420,8 @@ def render_readme(papers: list[dict], lang: str) -> str:
             "",
             "## 논문 목록",
             "",
-            "| Topic | arXiv id | 제목 | Tier | 상태 |",
-            "| --- | --- | --- | --- | --- |",
+            "| Topic | arXiv id | 제목 | Tier |",
+            "| --- | --- | --- | --- |",
         ]
 
     for topic in TOPIC_ORDER:
@@ -430,7 +430,7 @@ def render_readme(papers: list[dict], lang: str) -> str:
                 continue
             lines.append(
                 f"| `{topic}` | [{entry['arxiv_id']}]({arxiv_abs(entry['arxiv_id'])}) "
-                f"| {entry['title']} | {entry['tier']} | {entry['status']} |"
+                f"| {entry['title']} | {entry['tier']} |"
             )
 
     if en:
@@ -629,7 +629,6 @@ def render_topic_readme(topic: str, papers: list[dict], lang: str) -> str:
         lines.append(f"- PDF: [`{pdf_name}`](pdf/{pdf_name})")
         lines.append(f"- Notes: [`{note_name}`](notes/{note_name})")
         lines.append(f"- Tier: {tier}")
-        lines.append(f"- Status: {entry['status']}" if en else f"- 상태: {entry['status']}")
         if takeaway:
             lines.append("")
             lines.append(takeaway)

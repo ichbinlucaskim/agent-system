@@ -21,7 +21,6 @@ Joon Sung Park, Joseph C. O'Brien, Carrie J. Cai and others (2023)
 - PDF: [`2304.03442-generative-agents.pdf`](pdf/2304.03442-generative-agents.pdf)
 - Notes: [`2304.03442-generative-agents.md`](notes/2304.03442-generative-agents.md)
 - Tier: reference, consult as needed
-- Status: unread
 
 Read this for its memory architecture, which is the part that transfers to systems that are not simulations.
 
@@ -33,7 +32,6 @@ Qingyun Wu, Gagan Bansal, Jieyu Zhang and others (2023)
 - PDF: [`2308.08155-autogen.pdf`](pdf/2308.08155-autogen.pdf)
 - Notes: [`2308.08155-autogen.md`](notes/2308.08155-autogen.md)
 - Tier: reference, consult as needed
-- Status: unread
 
 Read this as a framework-shaped answer to multi-agent conversation, and compare its abstractions with an orchestrator written by hand.
 

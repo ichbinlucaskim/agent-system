@@ -20,7 +20,6 @@ Patrick Lewis, Ethan Perez, Aleksandra Piktus and others (2020)
 - PDF: [`2005.11401-rag.pdf`](pdf/2005.11401-rag.pdf)
 - Notes: [`2005.11401-rag.md`](notes/2005.11401-rag.md)
 - Tier: core, read first
-- Status: unread
 
 Read this for the original framing of retrieval as a component of generation rather than a preprocessing step.
 
@@ -32,7 +31,6 @@ Charles Packer, Sarah Wooders, Kevin Lin and others (2023)
 - PDF: [`2310.08560-memgpt.pdf`](pdf/2310.08560-memgpt.pdf)
 - Notes: [`2310.08560-memgpt.md`](notes/2310.08560-memgpt.md)
 - Tier: deep, read after the core paper in its topic
-- Status: unread
 
 Read this for the analogy between managing a context window and managing virtual memory.
 

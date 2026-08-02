@@ -20,7 +20,6 @@ Noah Shinn, Federico Cassano, Edward Berman 외 (2023)
 - PDF: [`2303.11366-reflexion.pdf`](pdf/2303.11366-reflexion.pdf)
 - Notes: [`2303.11366-reflexion.ko.md`](notes/2303.11366-reflexion.ko.md)
 - Tier: core, 먼저 읽기
-- 상태: unread
 
 단순히 재sampling하는 대신 시도 사이로 비평을 이어 나른다는 발상을 보기 위해 읽습니다.
 
@@ -32,7 +31,6 @@ Aman Madaan, Niket Tandon, Prakhar Gupta 외 (2023)
 - PDF: [`2303.17651-self-refine.pdf`](pdf/2303.17651-self-refine.pdf)
 - Notes: [`2303.17651-self-refine.ko.md`](notes/2303.17651-self-refine.ko.md)
 - Tier: deep, 해당 topic의 core 논문 다음에 읽기
-- 상태: unread
 
 비평을 하나의 모델 안에 두는 동시기의 접근으로, Reflexion과 나란히 읽습니다.
 

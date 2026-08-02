@@ -21,7 +21,6 @@ Joon Sung Park, Joseph C. O'Brien, Carrie J. Cai 외 (2023)
 - PDF: [`2304.03442-generative-agents.pdf`](pdf/2304.03442-generative-agents.pdf)
 - Notes: [`2304.03442-generative-agents.ko.md`](notes/2304.03442-generative-agents.ko.md)
 - Tier: reference, 필요할 때 참고
-- 상태: unread
 
 시뮬레이션이 아닌 시스템으로도 옮겨 가는 부분인 memory architecture를 보기 위해 읽습니다.
 
@@ -33,7 +32,6 @@ Qingyun Wu, Gagan Bansal, Jieyu Zhang 외 (2023)
 - PDF: [`2308.08155-autogen.pdf`](pdf/2308.08155-autogen.pdf)
 - Notes: [`2308.08155-autogen.ko.md`](notes/2308.08155-autogen.ko.md)
 - Tier: reference, 필요할 때 참고
-- 상태: unread
 
 multi-agent 대화에 대한 framework 형태의 답으로 읽고, 그 추상화를 직접 작성한 orchestrator와 비교하세요.
 

@@ -20,7 +20,6 @@ Shunyu Yao, Jeffrey Zhao, Dian Yu 외 (2022)
 - PDF: [`2210.03629-react.pdf`](pdf/2210.03629-react.pdf)
 - Notes: [`2210.03629-react.ko.md`](notes/2210.03629-react.ko.md)
 - Tier: core, 먼저 읽기
-- 상태: unread
 
 reasoning과 acting을 하나의 교대 주기에 놓은, agent 루프의 직접적인 조상으로 읽습니다.
 
@@ -32,7 +31,6 @@ Timo Schick, Jane Dwivedi-Yu, Roberto Dessì 외 (2023)
 - PDF: [`2302.04761-toolformer.pdf`](pdf/2302.04761-toolformer.pdf)
 - Notes: [`2302.04761-toolformer.ko.md`](notes/2302.04761-toolformer.ko.md)
 - Tier: deep, 해당 topic의 core 논문 다음에 읽기
-- 상태: unread
 
 tool interface를 어떻게 설계하는가와 구분되는 질문, 즉 tool 호출 능력이 어디서 오는가를 보기 위해 읽습니다.
 

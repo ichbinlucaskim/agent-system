@@ -20,7 +20,6 @@ Jason Wei, Xuezhi Wang, Dale Schuurmans and others (2022)
 - PDF: [`2201.11903-chain-of-thought.pdf`](pdf/2201.11903-chain-of-thought.pdf)
 - Notes: [`2201.11903-chain-of-thought.md`](notes/2201.11903-chain-of-thought.md)
 - Tier: core, read first
-- Status: unread
 
 Read this for the move that makes intermediate steps part of the output rather than something the model does silently.
 
@@ -32,7 +31,6 @@ Xuezhi Wang, Jason Wei, Dale Schuurmans and others (2022)
 - PDF: [`2203.11171-self-consistency.pdf`](pdf/2203.11171-self-consistency.pdf)
 - Notes: [`2203.11171-self-consistency.md`](notes/2203.11171-self-consistency.md)
 - Tier: deep, read after the core paper in its topic
-- Status: unread
 
 Read this as the sampling-and-aggregation view of a reasoning call, and compare it with the voting variant built in the lab.
 
@@ -44,7 +42,6 @@ Shunyu Yao, Dian Yu, Jeffrey Zhao and others (2023)
 - PDF: [`2305.10601-tree-of-thoughts.pdf`](pdf/2305.10601-tree-of-thoughts.pdf)
 - Notes: [`2305.10601-tree-of-thoughts.md`](notes/2305.10601-tree-of-thoughts.md)
 - Tier: deep, read after the core paper in its topic
-- Status: unread
 
 Read this for what changes when reasoning is treated as a search over branches rather than as a single line.
 

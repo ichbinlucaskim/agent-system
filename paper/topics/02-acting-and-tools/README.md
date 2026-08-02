@@ -20,7 +20,6 @@ Shunyu Yao, Jeffrey Zhao, Dian Yu and others (2022)
 - PDF: [`2210.03629-react.pdf`](pdf/2210.03629-react.pdf)
 - Notes: [`2210.03629-react.md`](notes/2210.03629-react.md)
 - Tier: core, read first
-- Status: unread
 
 Read this as the direct ancestor of the agent loop: reasoning and acting placed in one alternating cycle.
 
@@ -32,7 +31,6 @@ Timo Schick, Jane Dwivedi-Yu, Roberto Dessì and others (2023)
 - PDF: [`2302.04761-toolformer.pdf`](pdf/2302.04761-toolformer.pdf)
 - Notes: [`2302.04761-toolformer.md`](notes/2302.04761-toolformer.md)
 - Tier: deep, read after the core paper in its topic
-- Status: unread
 
 Read this for the question of where tool-calling ability comes from, as distinct from how a tool interface is designed.
 

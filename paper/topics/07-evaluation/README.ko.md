@@ -20,7 +20,6 @@ Carlos E. Jimenez, John Yang, Alexander Wettig 외 (2023)
 - PDF: [`2310.06770-swe-bench.pdf`](pdf/2310.06770-swe-bench.pdf)
 - Notes: [`2310.06770-swe-bench.ko.md`](notes/2310.06770-swe-bench.ko.md)
 - Tier: core, 먼저 읽기
-- 상태: unread
 
 실제 저장소 이력으로 benchmark를 구성하는 방법과, 그 구성이 무엇을 측정 가능하게 만드는지 보기 위해 읽습니다.
 
@@ -32,7 +31,6 @@ Shuyan Zhou, Frank F. Xu, Hao Zhu 외 (2023)
 - PDF: [`2307.13854-webarena.pdf`](pdf/2307.13854-webarena.pdf)
 - Notes: [`2307.13854-webarena.ko.md`](notes/2307.13854-webarena.ko.md)
 - Tier: reference, 필요할 때 참고
-- 상태: unread
 
 그 안에서 수행되는 agent evaluation이 의미를 갖기 위해 환경이 무엇을 제공해야 하는지 보기 위해 읽습니다.
 
@@ -44,7 +42,6 @@ Shunyu Yao, Noah Shinn, Pedram Razavi 외 (2024)
 - PDF: [`2406.12045-tau-bench.pdf`](pdf/2406.12045-tau-bench.pdf)
 - Notes: [`2406.12045-tau-bench.ko.md`](notes/2406.12045-tau-bench.ko.md)
 - Tier: deep, 해당 topic의 core 논문 다음에 읽기
-- 상태: unread
 
 tool, agent, user의 삼각 구도와, 루프의 일부인 사용자를 benchmark가 어떻게 다루는지 보기 위해 읽습니다.
 

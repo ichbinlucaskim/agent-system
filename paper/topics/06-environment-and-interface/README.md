@@ -20,7 +20,6 @@ Guanzhi Wang, Yuqi Xie, Yunfan Jiang and others (2023)
 - PDF: [`2305.16291-voyager.pdf`](pdf/2305.16291-voyager.pdf)
 - Notes: [`2305.16291-voyager.md`](notes/2305.16291-voyager.md)
 - Tier: reference, consult as needed
-- Status: unread
 
 Read this for the idea of an agent accumulating reusable skills inside an open-ended environment.
 
@@ -32,7 +31,6 @@ John Yang, Carlos E. Jimenez, Alexander Wettig and others (2024)
 - PDF: [`2405.15793-swe-agent.pdf`](pdf/2405.15793-swe-agent.pdf)
 - Notes: [`2405.15793-swe-agent.md`](notes/2405.15793-swe-agent.md)
 - Tier: deep, read after the core paper in its topic
-- Status: unread
 
 Read this for the agent-computer interface argument: the interface an agent is handed is itself a design variable.
 

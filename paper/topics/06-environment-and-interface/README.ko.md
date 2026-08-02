@@ -20,7 +20,6 @@ Guanzhi Wang, Yuqi Xie, Yunfan Jiang 외 (2023)
 - PDF: [`2305.16291-voyager.pdf`](pdf/2305.16291-voyager.pdf)
 - Notes: [`2305.16291-voyager.ko.md`](notes/2305.16291-voyager.ko.md)
 - Tier: reference, 필요할 때 참고
-- 상태: unread
 
 열린 환경 안에서 agent가 재사용 가능한 skill을 축적한다는 발상을 보기 위해 읽습니다.
 
@@ -32,7 +31,6 @@ John Yang, Carlos E. Jimenez, Alexander Wettig 외 (2024)
 - PDF: [`2405.15793-swe-agent.pdf`](pdf/2405.15793-swe-agent.pdf)
 - Notes: [`2405.15793-swe-agent.ko.md`](notes/2405.15793-swe-agent.ko.md)
 - Tier: deep, 해당 topic의 core 논문 다음에 읽기
-- 상태: unread
 
 agent-computer interface에 대한 논지, 즉 agent에게 주어지는 interface 자체가 설계 변수라는 주장을 보기 위해 읽습니다.
 

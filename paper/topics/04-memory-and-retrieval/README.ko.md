@@ -20,7 +20,6 @@ Patrick Lewis, Ethan Perez, Aleksandra Piktus 외 (2020)
 - PDF: [`2005.11401-rag.pdf`](pdf/2005.11401-rag.pdf)
 - Notes: [`2005.11401-rag.ko.md`](notes/2005.11401-rag.ko.md)
 - Tier: core, 먼저 읽기
-- 상태: unread
 
 retrieval을 전처리 단계가 아니라 generation의 구성 요소로 보는 최초의 규정을 보기 위해 읽습니다.
 
@@ -32,7 +31,6 @@ Charles Packer, Sarah Wooders, Kevin Lin 외 (2023)
 - PDF: [`2310.08560-memgpt.pdf`](pdf/2310.08560-memgpt.pdf)
 - Notes: [`2310.08560-memgpt.ko.md`](notes/2310.08560-memgpt.ko.md)
 - Tier: deep, 해당 topic의 core 논문 다음에 읽기
-- 상태: unread
 
 context window 관리와 virtual memory 관리 사이의 유비를 보기 위해 읽습니다.
 

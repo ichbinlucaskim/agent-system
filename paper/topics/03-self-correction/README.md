@@ -20,7 +20,6 @@ Noah Shinn, Federico Cassano, Edward Berman and others (2023)
 - PDF: [`2303.11366-reflexion.pdf`](pdf/2303.11366-reflexion.pdf)
 - Notes: [`2303.11366-reflexion.md`](notes/2303.11366-reflexion.md)
 - Tier: core, read first
-- Status: unread
 
 Read this for the idea of carrying a critique forward between attempts instead of simply resampling.
 
@@ -32,7 +31,6 @@ Aman Madaan, Niket Tandon, Prakhar Gupta and others (2023)
 - PDF: [`2303.17651-self-refine.pdf`](pdf/2303.17651-self-refine.pdf)
 - Notes: [`2303.17651-self-refine.md`](notes/2303.17651-self-refine.md)
 - Tier: deep, read after the core paper in its topic
-- Status: unread
 
 Read this next to Reflexion as the contemporaneous take that keeps the critique inside a single model.
 

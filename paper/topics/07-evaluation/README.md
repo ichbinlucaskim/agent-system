@@ -20,7 +20,6 @@ Carlos E. Jimenez, John Yang, Alexander Wettig and others (2023)
 - PDF: [`2310.06770-swe-bench.pdf`](pdf/2310.06770-swe-bench.pdf)
 - Notes: [`2310.06770-swe-bench.md`](notes/2310.06770-swe-bench.md)
 - Tier: core, read first
-- Status: unread
 
 Read this for how a benchmark can be constructed out of real repository history, and what that construction makes measurable.
 
@@ -32,7 +31,6 @@ Shuyan Zhou, Frank F. Xu, Hao Zhu and others (2023)
 - PDF: [`2307.13854-webarena.pdf`](pdf/2307.13854-webarena.pdf)
 - Notes: [`2307.13854-webarena.md`](notes/2307.13854-webarena.md)
 - Tier: reference, consult as needed
-- Status: unread
 
 Read this for what an environment has to provide before an agent evaluation carried out in it means anything.
 
@@ -44,7 +42,6 @@ Shunyu Yao, Noah Shinn, Pedram Razavi and others (2024)
 - PDF: [`2406.12045-tau-bench.pdf`](pdf/2406.12045-tau-bench.pdf)
 - Notes: [`2406.12045-tau-bench.md`](notes/2406.12045-tau-bench.md)
 - Tier: deep, read after the core paper in its topic
-- Status: unread
 
 Read this for the tool-agent-user triangle, and for how a benchmark handles a user who is part of the loop.
 

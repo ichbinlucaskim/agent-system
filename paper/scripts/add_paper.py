@@ -65,7 +65,6 @@ KEY_ORDER = [
     "extended_by",
     "related",
     "lab_refs",
-    "status",
 ]
 
 VALID_TOPICS = [
@@ -126,8 +125,6 @@ def _default_for(key: str):
         return []
     if key == "year":
         return None
-    if key == "status":
-        return "unread"
     return ""
 
 
@@ -256,7 +253,6 @@ def add_paper(
         "extended_by": extended_by or [],
         "related": related or [],
         "lab_refs": lab_refs or [],
-        "status": "unread",
     }
 
     destination = pdf_path_for(entry)

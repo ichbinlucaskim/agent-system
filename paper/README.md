@@ -36,24 +36,24 @@ results. If you want to know what a paper found, read the paper.
 
 ## Papers
 
-| Topic | arXiv id | Title | Tier | Status |
-| --- | --- | --- | --- | --- |
-| `01-reasoning` | [2201.11903](https://arxiv.org/abs/2201.11903) | Chain-of-Thought Prompting Elicits Reasoning in Large Language Models | core | unread |
-| `01-reasoning` | [2203.11171](https://arxiv.org/abs/2203.11171) | Self-Consistency Improves Chain of Thought Reasoning in Language Models | deep | unread |
-| `01-reasoning` | [2305.10601](https://arxiv.org/abs/2305.10601) | Tree of Thoughts: Deliberate Problem Solving with Large Language Models | deep | unread |
-| `02-acting-and-tools` | [2210.03629](https://arxiv.org/abs/2210.03629) | ReAct: Synergizing Reasoning and Acting in Language Models | core | unread |
-| `02-acting-and-tools` | [2302.04761](https://arxiv.org/abs/2302.04761) | Toolformer: Language Models Can Teach Themselves to Use Tools | deep | unread |
-| `03-self-correction` | [2303.11366](https://arxiv.org/abs/2303.11366) | Reflexion: Language Agents with Verbal Reinforcement Learning | core | unread |
-| `03-self-correction` | [2303.17651](https://arxiv.org/abs/2303.17651) | Self-Refine: Iterative Refinement with Self-Feedback | deep | unread |
-| `04-memory-and-retrieval` | [2005.11401](https://arxiv.org/abs/2005.11401) | Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks | core | unread |
-| `04-memory-and-retrieval` | [2310.08560](https://arxiv.org/abs/2310.08560) | MemGPT: Towards LLMs as Operating Systems | deep | unread |
-| `05-multi-agent` | [2304.03442](https://arxiv.org/abs/2304.03442) | Generative Agents: Interactive Simulacra of Human Behavior | reference | unread |
-| `05-multi-agent` | [2308.08155](https://arxiv.org/abs/2308.08155) | AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation | reference | unread |
-| `06-environment-and-interface` | [2305.16291](https://arxiv.org/abs/2305.16291) | Voyager: An Open-Ended Embodied Agent with Large Language Models | reference | unread |
-| `06-environment-and-interface` | [2405.15793](https://arxiv.org/abs/2405.15793) | SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering | deep | unread |
-| `07-evaluation` | [2310.06770](https://arxiv.org/abs/2310.06770) | SWE-bench: Can Language Models Resolve Real-World GitHub Issues? | core | unread |
-| `07-evaluation` | [2307.13854](https://arxiv.org/abs/2307.13854) | WebArena: A Realistic Web Environment for Building Autonomous Agents | reference | unread |
-| `07-evaluation` | [2406.12045](https://arxiv.org/abs/2406.12045) | tau-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains | deep | unread |
+| Topic | arXiv id | Title | Tier |
+| --- | --- | --- | --- |
+| `01-reasoning` | [2201.11903](https://arxiv.org/abs/2201.11903) | Chain-of-Thought Prompting Elicits Reasoning in Large Language Models | core |
+| `01-reasoning` | [2203.11171](https://arxiv.org/abs/2203.11171) | Self-Consistency Improves Chain of Thought Reasoning in Language Models | deep |
+| `01-reasoning` | [2305.10601](https://arxiv.org/abs/2305.10601) | Tree of Thoughts: Deliberate Problem Solving with Large Language Models | deep |
+| `02-acting-and-tools` | [2210.03629](https://arxiv.org/abs/2210.03629) | ReAct: Synergizing Reasoning and Acting in Language Models | core |
+| `02-acting-and-tools` | [2302.04761](https://arxiv.org/abs/2302.04761) | Toolformer: Language Models Can Teach Themselves to Use Tools | deep |
+| `03-self-correction` | [2303.11366](https://arxiv.org/abs/2303.11366) | Reflexion: Language Agents with Verbal Reinforcement Learning | core |
+| `03-self-correction` | [2303.17651](https://arxiv.org/abs/2303.17651) | Self-Refine: Iterative Refinement with Self-Feedback | deep |
+| `04-memory-and-retrieval` | [2005.11401](https://arxiv.org/abs/2005.11401) | Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks | core |
+| `04-memory-and-retrieval` | [2310.08560](https://arxiv.org/abs/2310.08560) | MemGPT: Towards LLMs as Operating Systems | deep |
+| `05-multi-agent` | [2304.03442](https://arxiv.org/abs/2304.03442) | Generative Agents: Interactive Simulacra of Human Behavior | reference |
+| `05-multi-agent` | [2308.08155](https://arxiv.org/abs/2308.08155) | AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation | reference |
+| `06-environment-and-interface` | [2305.16291](https://arxiv.org/abs/2305.16291) | Voyager: An Open-Ended Embodied Agent with Large Language Models | reference |
+| `06-environment-and-interface` | [2405.15793](https://arxiv.org/abs/2405.15793) | SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering | deep |
+| `07-evaluation` | [2310.06770](https://arxiv.org/abs/2310.06770) | SWE-bench: Can Language Models Resolve Real-World GitHub Issues? | core |
+| `07-evaluation` | [2307.13854](https://arxiv.org/abs/2307.13854) | WebArena: A Realistic Web Environment for Building Autonomous Agents | reference |
+| `07-evaluation` | [2406.12045](https://arxiv.org/abs/2406.12045) | tau-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains | deep |
 
 ## Default reading path
 

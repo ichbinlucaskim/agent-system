@@ -35,7 +35,6 @@
 #   extended_by       list of arxiv_id strings
 #   related           list of arxiv_id strings
 #   lab_refs          lab folder names in the sibling lab repository
-#   status            unread | reading | read
 
 papers:
 - arxiv_id: '2201.11903'
@@ -63,7 +62,6 @@ papers:
   related: []
   lab_refs:
   - 02-prompt-chaining
-  status: unread
 - arxiv_id: '2203.11171'
   slug: self-consistency
   title: Self-Consistency Improves Chain of Thought Reasoning in Language Models
@@ -87,7 +85,6 @@ papers:
   related: []
   lab_refs:
   - 04-parallelization
-  status: unread
 - arxiv_id: '2305.10601'
   slug: tree-of-thoughts
   title: 'Tree of Thoughts: Deliberate Problem Solving with Large Language Models'
@@ -110,7 +107,6 @@ papers:
   related: []
   lab_refs:
   - 05-orchestrator-workers
-  status: unread
 - arxiv_id: '2210.03629'
   slug: react
   title: 'ReAct: Synergizing Reasoning and Acting in Language Models'
@@ -138,7 +134,6 @@ papers:
   lab_refs:
   - 01-augmented-llm
   - 12-agent-loop
-  status: unread
 - arxiv_id: '2302.04761'
   slug: toolformer
   title: 'Toolformer: Language Models Can Teach Themselves to Use Tools'
@@ -162,7 +157,6 @@ papers:
   related: []
   lab_refs:
   - 07-tool-design-aci
-  status: unread
 - arxiv_id: '2303.11366'
   slug: reflexion
   title: 'Reflexion: Language Agents with Verbal Reinforcement Learning'
@@ -185,7 +179,6 @@ papers:
   lab_refs:
   - 06-evaluator-optimizer
   - 12-agent-loop
-  status: unread
 - arxiv_id: '2303.17651'
   slug: self-refine
   title: 'Self-Refine: Iterative Refinement with Self-Feedback'
@@ -216,7 +209,6 @@ papers:
   - '2303.11366'
   lab_refs:
   - 06-evaluator-optimizer
-  status: unread
 - arxiv_id: '2005.11401'
   slug: rag
   title: Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks
@@ -244,7 +236,6 @@ papers:
   lab_refs:
   - 08-rag-basics
   - 09-retrieval-quality
-  status: unread
 - arxiv_id: '2310.08560'
   slug: memgpt
   title: 'MemGPT: Towards LLMs as Operating Systems'
@@ -266,7 +257,6 @@ papers:
   related: []
   lab_refs:
   - 11-context-memory
-  status: unread
 - arxiv_id: '2304.03442'
   slug: generative-agents
   title: 'Generative Agents: Interactive Simulacra of Human Behavior'
@@ -289,7 +279,6 @@ papers:
   lab_refs:
   - 11-context-memory
   - 13-subagents
-  status: unread
 - arxiv_id: '2308.08155'
   slug: autogen
   title: 'AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation'
@@ -318,7 +307,6 @@ papers:
   lab_refs:
   - 05-orchestrator-workers
   - 13-subagents
-  status: unread
 - arxiv_id: '2305.16291'
   slug: voyager
   title: 'Voyager: An Open-Ended Embodied Agent with Large Language Models'
@@ -342,7 +330,6 @@ papers:
   related: []
   lab_refs:
   - 12-agent-loop
-  status: unread
 - arxiv_id: '2405.15793'
   slug: swe-agent
   title: 'SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering'
@@ -367,7 +354,6 @@ papers:
   lab_refs:
   - 07-tool-design-aci
   - 18-packaging-deploy
-  status: unread
 - arxiv_id: '2310.06770'
   slug: swe-bench
   title: 'SWE-bench: Can Language Models Resolve Real-World GitHub Issues?'
@@ -389,7 +375,6 @@ papers:
   related: []
   lab_refs:
   - 15-evaluation
-  status: unread
 - arxiv_id: '2307.13854'
   slug: webarena
   title: 'WebArena: A Realistic Web Environment for Building Autonomous Agents'
@@ -416,7 +401,6 @@ papers:
   lab_refs:
   - 15-evaluation
   - 16-observability
-  status: unread
 - arxiv_id: '2406.12045'
   slug: tau-bench
   title: 'tau-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains'
@@ -435,4 +419,3 @@ papers:
   lab_refs:
   - 14-human-in-the-loop
   - 15-evaluation
-  status: unread

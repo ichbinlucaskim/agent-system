@@ -95,14 +95,15 @@ the offline parts of a lab before spending anything.
 
 ## What is implemented today
 
-Labs 00 and 01 are complete: a working starter with TODOs, a reference
-solution, and passing tests.
+All nineteen labs are complete: a fully written README in both languages, a
+`starter/main.py` with signatures and TODOs, a reference `solution/main.py`,
+and a test file with real assertions against the solution. Everything
+deterministic is tested offline; the few tests that need a live model call skip
+cleanly without an API key.
 
-**Labs 02 through 18 currently ship as skeletons.** Each has a fully written
-README in both languages, a `starter/main.py` with signatures and TODOs, a
-`solution/main.py` that reads `Reference solution. Not yet written.`, and a test
-file that names each expected behaviour and skips with `Lab not implemented
-yet`. Implementing them is the exercise.
+The exercise is still yours: work from `starter/main.py` and use the tests to
+check your implementation. The solutions are reference answers to compare
+against, not the starting point.
 
 ## Repository layout
 

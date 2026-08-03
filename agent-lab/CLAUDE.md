@@ -124,9 +124,10 @@ so it **skips** rather than fails when `ANTHROPIC_API_KEY` is absent. Use the
 skip helper each test file already defines; do not let a missing key turn into
 a red test.
 
-Labs 02 through 18 currently ship as skeletons. Their tests name the behaviour
-in comments and call `pytest.skip("Lab not implemented yet")`. When a lab is
-implemented, remove the skip and make the assertions real.
+Every lab ships with real tests asserting its solution's behaviour. Anything
+deterministic is tested offline, driving the solution through stubbed model
+calls where needed; only tests that genuinely need a live call carry the
+`requires_api` skip marker.
 
 ## Secrets
 

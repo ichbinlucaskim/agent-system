@@ -1,40 +1,132 @@
 """Tests for Lab 14 - Human in the loop.
 
-Each test names the behaviour the lab must produce and describes its
-assertion in a comment. The bodies skip until the lab is implemented:
-replace the skip with the real assertion as you build each piece.
+Classification, the diff, and the enforcement paths are deterministic and
+approvals come through a scripted callback, so every test runs offline
+without an API key.
 """
 
 from __future__ import annotations
 
-import pytest
+import importlib.util
+import sys
+from pathlib import Path
 
 
-def test_a_forbidden_action_is_never_executed():
-    # Assert the executor is not called and the approver is not prompted for a forbidden tool.
-    pytest.skip("Lab not implemented yet")
+def _load(name: str, path: Path):
+    """Load a module by file path.
+
+    The module is registered in sys.modules before execution because
+    dataclasses look their own module up by name while being created.
+    """
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+LAB_ROOT = Path(__file__).resolve().parents[1]
+solution = _load("lab14_solution", LAB_ROOT / "solution" / "main.py")
+
+
+def test_a_forbidden_action_is_never_executed(monkeypatch):
+    """Forbidden is refused before the approver or any executor is reached."""
+    executed: list[dict] = []
+    prompts: list[str] = []
+
+    def recorder(arguments):
+        executed.append(arguments)
+        return "dropped"
+
+    def approver(prompt):
+        prompts.append(prompt)
+        return True
+
+    # Even with an executor registered and an approver saying yes, the
+    # refusal must happen first.
+    monkeypatch.setitem(solution.EXECUTORS, "delete_database", recorder)
+    record = solution.guarded_execute(
+        {"name": "delete_database", "arguments": {"env": "production"}}, approver
+    )
+    assert record["executed"] is False
+    assert record["classification"] == "forbidden"
+    assert executed == []
+    assert prompts == []
 
 
 def test_an_unknown_tool_defaults_to_confirm():
-    # Assert a tool missing from POLICY is classified 'confirm' rather than 'auto'.
-    pytest.skip("Lab not implemented yet")
+    """A tool nobody classified is a tool nobody thought about."""
+    assert solution.classify_action("format_disk", {}) == "confirm"
 
 
 def test_an_auto_action_runs_without_an_approver():
-    # Assert an auto-classified action executes even when the approver would deny.
-    pytest.skip("Lab not implemented yet")
+    """An auto action executes even when the approver would deny it."""
+    prompts: list[str] = []
+
+    def deny(prompt):
+        prompts.append(prompt)
+        return False
+
+    record = solution.guarded_execute(
+        {"name": "read_file", "arguments": {"path": "notes.txt"}}, deny
+    )
+    assert record["executed"] is True
+    assert record["classification"] == "auto"
+    assert prompts == []
 
 
 def test_a_denied_confirmation_does_not_execute():
-    # Assert an approver returning False leaves the action unexecuted and records the reason.
-    pytest.skip("Lab not implemented yet")
+    """An approver saying no leaves the action unexecuted, with the reason."""
+
+    def deny(prompt):
+        return False
+
+    record = solution.guarded_execute(
+        {
+            "name": "send_email",
+            "arguments": {"to": "team@example.com", "subject": "Weekly report"},
+        },
+        deny,
+    )
+    assert record["executed"] is False
+    assert record["classification"] == "confirm"
+    assert "denied" in record["reason"]
+    assert record["result"] is None
 
 
 def test_the_diff_shows_added_and_removed_lines():
-    # Assert render_diff includes both the removed line and the added line for a changed file.
-    pytest.skip("Lab not implemented yet")
+    """The approver sees the consequence: what leaves and what arrives."""
+    diff = solution.render_diff(
+        "alpha\nbeta\ngamma\n", "alpha\nBETA\ngamma\n", "notes.txt"
+    )
+    assert "-beta" in diff
+    assert "+BETA" in diff
 
 
 def test_every_path_returns_an_audit_record():
-    # Assert refusals, approvals, and denials all return a record naming the classification.
-    pytest.skip("Lab not implemented yet")
+    """Refusal, auto, approval, and denial all name their classification."""
+
+    def approve(prompt):
+        return True
+
+    def deny(prompt):
+        return False
+
+    records = [
+        solution.guarded_execute(
+            {"name": "delete_database", "arguments": {}}, approve
+        ),
+        solution.guarded_execute({"name": "list_files", "arguments": {}}, deny),
+        solution.guarded_execute(
+            {"name": "send_email", "arguments": {"to": "a@example.com"}}, approve
+        ),
+        solution.guarded_execute(
+            {"name": "send_email", "arguments": {"to": "a@example.com"}}, deny
+        ),
+    ]
+    classifications = [record["classification"] for record in records]
+    assert classifications == ["forbidden", "auto", "confirm", "confirm"]
+    for record in records:
+        assert set(record) >= {"executed", "classification", "reason", "result"}
+        assert record["reason"]

@@ -93,14 +93,14 @@ make test-lab LAB=labs/00-setup
 
 ## 현재 구현 상태
 
-lab 00과 01은 완성되어 있습니다. TODO가 있는 동작하는 starter, 참조 solution,
-통과하는 테스트가 모두 갖춰져 있습니다.
+열아홉 개의 lab이 모두 완성되어 있습니다. 각 lab에는 두 언어로 완전히 작성된
+README, 시그니처와 TODO가 있는 `starter/main.py`, 참조 `solution/main.py`,
+그리고 solution의 동작을 실제로 검증하는 assertion이 담긴 테스트 파일이
+있습니다. 결정적인 부분은 모두 오프라인으로 테스트되며, 실제 모델 호출이 필요한
+소수의 테스트는 API key가 없으면 깔끔하게 skip됩니다.
 
-**lab 02부터 18까지는 현재 skeleton 상태로 제공됩니다.** 각 lab에는 두 언어로
-완전히 작성된 README, 시그니처와 TODO가 있는 `starter/main.py`, `Reference
-solution. Not yet written.`이라고만 적힌 `solution/main.py`, 그리고 기대 동작을
-각각 이름으로 명시하고 `Lab not implemented yet`으로 skip하는 테스트 파일이
-있습니다. 이를 구현하는 것이 곧 연습 과제입니다.
+연습 과제는 여전히 여러분의 몫입니다. `starter/main.py`에서 시작해 테스트로
+구현을 확인하세요. solution은 비교를 위한 참조 답안이지 출발점이 아닙니다.
 
 ## 저장소 구조
 

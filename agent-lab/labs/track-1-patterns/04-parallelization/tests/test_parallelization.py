@@ -1,40 +1,105 @@
 """Tests for Lab 04 - Parallelization.
 
-Each test names the behaviour the lab must produce and describes its
-assertion in a comment. The bodies skip until the lab is implemented:
-replace the skip with the real assertion as you build each piece.
+Ordering, failure isolation, voting, and merging are deterministic once the
+per-section model call is stubbed, so every test runs offline and no API key
+is needed.
 """
 
 from __future__ import annotations
 
-import pytest
+import importlib.util
+import sys
+import time
+from pathlib import Path
 
 
-def test_run_sections_preserves_input_order():
-    # Assert that when a later section finishes first, the returned list is still in the original section order.
-    pytest.skip("Lab not implemented yet")
+def _load(name: str, path: Path):
+    """Load a module by file path.
+
+    The module is registered in sys.modules before execution because
+    dataclasses look their own module up by name while being created.
+    """
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
-def test_a_failed_section_does_not_lose_the_others():
-    # Assert that one raising call yields an error entry in its slot while the other sections still return results.
-    pytest.skip("Lab not implemented yet")
+LAB_ROOT = Path(__file__).resolve().parents[1]
+solution = _load("lab04_solution", LAB_ROOT / "solution" / "main.py")
+
+SECTIONS = [
+    {"name": "correctness", "instruction": "check facts"},
+    {"name": "tone", "instruction": "check tone"},
+    {"name": "legal-risk", "instruction": "check risk"},
+]
+
+
+def test_run_sections_preserves_input_order(monkeypatch):
+    """A later section finishing first must not reorder the results."""
+    delays = {"correctness": 0.05, "tone": 0.0, "legal-risk": 0.0}
+
+    def fake_run(section_spec, text):
+        # The first section sleeps, so the others complete before it.
+        time.sleep(delays[section_spec["name"]])
+        return f"result for {section_spec['name']}"
+
+    monkeypatch.setattr(solution, "_run_one_section", fake_run)
+    results = solution.run_sections(SECTIONS, "the text")
+    assert [entry["name"] for entry in results] == [
+        "correctness",
+        "tone",
+        "legal-risk",
+    ]
+    assert results[1]["result"] == "result for tone"
+
+
+def test_a_failed_section_does_not_lose_the_others(monkeypatch):
+    """One raising call yields an error entry while the rest still return."""
+
+    def fake_run(section_spec, text):
+        if section_spec["name"] == "tone":
+            raise RuntimeError("boom")
+        return f"result for {section_spec['name']}"
+
+    monkeypatch.setattr(solution, "_run_one_section", fake_run)
+    results = solution.run_sections(SECTIONS, "the text")
+    assert len(results) == len(SECTIONS)
+    by_name = {entry["name"]: entry for entry in results}
+    assert by_name["tone"]["result"] is None
+    assert "boom" in by_name["tone"]["error"]
+    assert by_name["correctness"]["error"] is None
+    assert by_name["legal-risk"]["result"] == "result for legal-risk"
 
 
 def test_majority_picks_the_modal_answer_and_reports_agreement():
-    # Assert ['yes','yes','no'] returns ('yes', 2/3).
-    pytest.skip("Lab not implemented yet")
+    """Two of three votes for 'yes' return ('yes', 2/3)."""
+    answer, agreement = solution.majority(["yes", "yes", "no"])
+    assert answer == "yes"
+    assert agreement == 2 / 3
 
 
 def test_majority_breaks_ties_deterministically():
-    # Assert ['a','b'] returns the same answer on repeated calls.
-    pytest.skip("Lab not implemented yet")
+    """A tie resolves the same way on every call, by first appearance."""
+    outcomes = {solution.majority(["a", "b"]) for _ in range(10)}
+    assert outcomes == {("a", 0.5)}
 
 
 def test_majority_handles_an_empty_vote_list():
-    # Assert an empty list returns ('', 0.0) rather than raising.
-    pytest.skip("Lab not implemented yet")
+    """No votes returns ('', 0.0) rather than raising."""
+    assert solution.majority([]) == ("", 0.0)
 
 
 def test_merge_sections_keeps_every_section_labelled():
-    # Assert each section name appears in the merged report.
-    pytest.skip("Lab not implemented yet")
+    """Each section name appears in the merged report."""
+    results = [
+        {"name": "correctness", "result": "two errors found", "error": None},
+        {"name": "tone", "result": None, "error": "RuntimeError: boom"},
+    ]
+    report = solution.merge_sections(results)
+    assert "correctness" in report
+    assert "tone" in report
+    assert "two errors found" in report
+    assert "boom" in report

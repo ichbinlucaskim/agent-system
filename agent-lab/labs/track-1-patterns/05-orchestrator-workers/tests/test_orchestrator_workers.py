@@ -67,6 +67,37 @@ def test_validate_plan_removes_duplicate_subtasks():
     assert [entry["id"] for entry in valid] == ["t1", "t3"]
 
 
+def test_validate_plan_rejects_a_repeated_id():
+    """Two subtasks sharing an id would be indistinguishable downstream."""
+    plan = [
+        {"id": "t1", "description": "Check VAT registration thresholds."},
+        {"id": "t1", "description": "Summarize the returns directive."},
+        {"id": "t2", "description": "Compare carrier options."},
+    ]
+    valid = solution.validate_plan(plan)
+    assert [entry["id"] for entry in valid] == ["t1", "t2"]
+    assert valid[0]["description"] == "Check VAT registration thresholds."
+
+
+def test_the_planner_is_told_the_plan_rules(monkeypatch):
+    """The rules the planner must follow reach the planner's prompt.
+
+    A subtask that depends on another subtask passes every shape check
+    validate_plan can make, so the prompt is the only place this is caught.
+    """
+    seen: dict[str, str] = {}
+
+    def fake_complete(messages, *, system=None, **kwargs):
+        seen["system"] = system or ""
+        return _fake_response('[{"id": "t1", "description": "Do the thing."}]')
+
+    monkeypatch.setattr(solution, "complete", fake_complete)
+    solution.plan("the task")
+
+    for rule in solution.PLAN_RULES:
+        assert rule in seen["system"]
+
+
 def test_orchestrate_returns_the_plan_with_the_answer(monkeypatch):
     """The plan rides along with the answer, so the run is explainable."""
     fixed = [{"id": "t1", "description": "Check shipping rules for the EU."}]

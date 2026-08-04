@@ -18,6 +18,8 @@ The distinguishing feature of this pattern is that the subtasks are not known in
 
 That flexibility is exactly what makes it riskier. A generated plan can be empty, enormous, redundant, or nonsense. Treat the plan as untrusted input: validate its shape, cap the number of subtasks, drop duplicates, and reject entries missing required fields, before spending a single worker call on it.
 
+Note what that validation cannot do. In lab 03 the classifier chose from a closed set, so you could check the answer against the set and know it was wrong. A plan is an open output with nothing to compare it to, so validation can only see shape, never sense. A subtask reading "synthesize the findings from the other subtasks" has an id, a description, and no duplicate, and it passes every check while being impossible to execute: it runs concurrently with the subtasks it claims to read. The only defence against that one is the planner's own prompt, which is why the rules belong there and are worth stating explicitly rather than hoping the word "independent" covers them.
+
 Workers should be narrow. Each one receives a subtask description and only the context that subtask needs, not the entire conversation. Narrow context is what keeps worker calls cheap and keeps one subtask's noise from contaminating another's answer.
 
 Synthesis is a real step, not a concatenation. The lead reads the worker outputs and produces the answer to the original task, resolving contradictions between workers and dropping what turned out to be irrelevant. If your synthesis step is just string joining, you have built sectioning with extra steps.
@@ -26,8 +28,8 @@ Cost grows quickly here: one planning call, N worker calls, one synthesis call, 
 
 ## Steps
 
-1. Implement `plan`: one lead call that reads the task and returns a list of subtasks as structured data, each with an id and a description.
-2. Implement `validate_plan`: reject entries missing fields, drop duplicates, and truncate to `max_subtasks`. A generated plan is untrusted input.
+1. Implement `plan`: one lead call that reads the task and returns a list of subtasks as structured data, each with an id and a description. Define the rules the planner must follow in `PLAN_RULES` and put them in the system prompt: each subtask standing on its own, no subtask that synthesizes the others, unique ids.
+2. Implement `validate_plan`: reject entries missing fields, drop duplicates, drop repeated ids, and truncate to `max_subtasks`. A generated plan is untrusted input.
 3. Implement `run_worker`: execute one subtask with a narrow system prompt and only the context that subtask needs, returning the result plus the subtask id.
 4. Implement `orchestrate`: plan, validate, run the workers concurrently with a cap, and synthesize. Return the plan, the worker results, and the final answer.
 5. Implement `synthesize`: a final lead call that answers the original task from the worker outputs and resolves contradictions between them.
@@ -39,11 +41,12 @@ Cost grows quickly here: one planning call, N worker calls, one synthesis call, 
 pytest labs/track-1-patterns/05-orchestrator-workers/tests -v
 ```
 
-Plan validation and orchestration control flow are tested offline against a stubbed planner. Passing means a malformed plan is rejected rather than executed, the subtask cap holds, a failing worker does not abort the run, and the returned result contains the plan so an expensive run can be explained.
+Plan validation and orchestration control flow are tested offline against a stubbed planner. Passing means a malformed plan is rejected rather than executed, the subtask cap holds, repeated ids do not survive validation, the planner is told the rules it has to follow, a failing worker does not abort the run, and the returned result contains the plan so an expensive run can be explained.
 
 ## Going further
 
 - Run the same task as sectioning from lab 04 with a hand-written plan, and compare quality and cost against the generated plan.
+- Remove `PLAN_RULES` from the planner prompt, generate the plan five or six times, and count how many runs contain a subtask that depends on another one. Note which runs they are: the plans that fill the cap are the ones with the most room to go wrong.
 - Let a worker request one additional subtask, capped, and observe how quickly a self-extending plan grows.
 - Give workers a smaller model than the lead and measure what that costs in final quality.
 

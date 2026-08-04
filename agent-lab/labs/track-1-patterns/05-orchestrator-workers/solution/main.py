@@ -29,14 +29,34 @@ def _parse_json_array(raw: str) -> list[Any]:
     return parsed
 
 
+# Asking for "independent" subtasks is not enough on its own. Left at that,
+# the planner regularly spends its last slot on a "synthesize the other
+# subtasks" entry, which runs concurrently with the very subtasks it claims
+# to read and so has nothing to work from. validate_plan cannot catch it:
+# the entry has an id, a description, and no duplicate, so its shape is
+# perfect and only its meaning is wrong. Shape is all validation can see,
+# which is why the boundary has to be spelled out to the planner instead.
+PLAN_RULES = (
+    "Every subtask must be answerable on its own, with no access to any "
+    "other subtask's output.",
+    "Never emit a subtask that summarizes, combines, or builds on the "
+    "other subtasks. Synthesis is the lead's job and happens after the "
+    "workers have finished.",
+    "Every id must be unique.",
+)
+
+
 def plan(task: str) -> list[dict[str, Any]]:
     """Lead call that decomposes a task into subtasks as structured data."""
+    rules = " ".join(
+        f"({number}) {rule}" for number, rule in enumerate(PLAN_RULES, start=1)
+    )
     system = (
         "You are the lead of a small research team. Decompose the task into "
         "independent subtasks that can run in any order. Respond with a JSON "
         "array only, no prose and no code fences, in this shape: "
         '[{"id": "t1", "description": "one specific subtask"}]. '
-        "Use between two and six subtasks."
+        f"Use between two and six subtasks. Rules: {rules}"
     )
     response = complete([{"role": "user", "content": task}], system=system)
     # Parse, never string-match. A plan we cannot parse is a plan we cannot
@@ -49,7 +69,8 @@ def validate_plan(
 ) -> list[dict[str, Any]]:
     """Reject malformed entries, drop duplicates, and cap the count."""
     valid: list[dict[str, Any]] = []
-    seen: set[str] = set()
+    seen_descriptions: set[str] = set()
+    seen_ids: set[str] = set()
     for entry in subtasks:
         if not isinstance(entry, dict):
             continue
@@ -59,13 +80,21 @@ def validate_plan(
             continue
         if not isinstance(description, str) or not description.strip():
             continue
+        subtask_id = subtask_id.strip()
+        # Everything downstream addresses a subtask by its id: results are
+        # looked up by it and synthesis labels each finding with it. A
+        # repeated id makes two subtasks indistinguishable, so the second
+        # one goes rather than silently shadowing the first.
+        if subtask_id in seen_ids:
+            continue
         # Duplicate descriptions collapse to one entry: the same work should
         # not be paid for twice just because the planner repeated itself.
         key = " ".join(description.lower().split())
-        if key in seen:
+        if key in seen_descriptions:
             continue
-        seen.add(key)
-        valid.append({"id": subtask_id.strip(), "description": description.strip()})
+        seen_ids.add(subtask_id)
+        seen_descriptions.add(key)
+        valid.append({"id": subtask_id, "description": description.strip()})
     # The cap bounds cost no matter how enthusiastic the generated plan was.
     return valid[:max_subtasks]
 

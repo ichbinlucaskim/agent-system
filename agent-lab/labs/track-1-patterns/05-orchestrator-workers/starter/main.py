@@ -13,15 +13,24 @@ from __future__ import annotations
 from typing import Any
 
 
+# TODO: step 1. The rules the planner must follow, one string each. Asking
+# for "independent" subtasks is not enough: the planner will still emit a
+# final "synthesize the other subtasks" entry that runs concurrently with
+# the subtasks it claims to read. validate_plan cannot catch that, because
+# the entry's shape is perfect and only its meaning is wrong, so state the
+# boundary here. Also require unique ids.
+PLAN_RULES: tuple[str, ...] = ()
+
+
 def plan(task: str) -> list[dict[str, Any]]:
     """Lead call that decomposes a task into subtasks as structured data."""
-    # TODO: step 1. Ask for JSON with an id and a description per subtask, and parse it. Never string-match the raw response; parse it and fail loudly if it does not parse.
+    # TODO: step 1. Ask for JSON with an id and a description per subtask, and parse it. Never string-match the raw response; parse it and fail loudly if it does not parse. Put PLAN_RULES in the system prompt.
     raise NotImplementedError
 
 
 def validate_plan(subtasks: list[dict[str, Any]], *, max_subtasks: int = 6) -> list[dict[str, Any]]:
     """Reject malformed entries, drop duplicates, and cap the count."""
-    # TODO: step 2. Treat the generated plan as untrusted input. Entries missing id or description are dropped, duplicate descriptions collapse, and the list is truncated to max_subtasks.
+    # TODO: step 2. Treat the generated plan as untrusted input. Entries missing id or description are dropped, duplicate descriptions collapse, repeated ids are dropped because everything downstream addresses a subtask by its id, and the list is truncated to max_subtasks.
     raise NotImplementedError
 
 

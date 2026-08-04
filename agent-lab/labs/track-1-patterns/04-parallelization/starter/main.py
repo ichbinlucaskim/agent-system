@@ -31,9 +31,10 @@ def merge_sections(results: list[dict[str, Any]]) -> str:
     raise NotImplementedError
 
 
-def vote(question: str, n: int = 3) -> list[str]:
+def vote(question: str, n: int = 3) -> tuple[list[str], list[str]]:
     """Run the same question n times concurrently and collect the answers."""
     # TODO: step 4. Normalise each answer before returning it, so trivial formatting differences do not read as disagreement.
+    # TODO: step 6. Return (answers, errors). A call that fails costs one vote, not the batch, and the caller needs to see how many votes went missing.
     raise NotImplementedError
 
 

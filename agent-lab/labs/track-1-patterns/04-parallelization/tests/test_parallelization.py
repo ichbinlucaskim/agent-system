@@ -8,7 +8,9 @@ is needed.
 from __future__ import annotations
 
 import importlib.util
+import itertools
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -72,6 +74,40 @@ def test_a_failed_section_does_not_lose_the_others(monkeypatch):
     assert "boom" in by_name["tone"]["error"]
     assert by_name["correctness"]["error"] is None
     assert by_name["legal-risk"]["result"] == "result for legal-risk"
+
+
+def test_vote_keeps_the_answers_it_got_when_one_call_fails(monkeypatch):
+    """A lost call costs one vote, not the whole batch."""
+    seen = itertools.count(1)
+    guard = threading.Lock()
+
+    def flaky(question):
+        with guard:
+            index = next(seen)
+        if index == 2:
+            raise RuntimeError("rate limited")
+        return "Yes."
+
+    monkeypatch.setattr(solution, "_ask_once", flaky)
+    answers, errors = solution.vote("is it safe?", n=3)
+    assert answers == ["yes", "yes"]
+    assert len(errors) == 1
+    assert "rate limited" in errors[0]
+    # Agreement is measured over the votes that arrived, not over n.
+    assert solution.majority(answers) == ("yes", 1.0)
+
+
+def test_a_vote_that_loses_every_call_reports_no_agreement(monkeypatch):
+    """Losing every call yields an empty vote rather than an exception."""
+
+    def always_fails(question):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(solution, "_ask_once", always_fails)
+    answers, errors = solution.vote("is it safe?", n=3)
+    assert answers == []
+    assert len(errors) == 3
+    assert solution.majority(answers) == ("", 0.0)
 
 
 def test_majority_picks_the_modal_answer_and_reports_agreement():

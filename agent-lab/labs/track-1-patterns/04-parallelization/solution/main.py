@@ -118,14 +118,30 @@ def _ask_once(question: str) -> str:
     return text_of(response)
 
 
-def vote(question: str, n: int = 3) -> list[str]:
-    """Run the same question n times concurrently and collect the answers."""
+def vote(question: str, n: int = 3) -> tuple[list[str], list[str]]:
+    """Run the same question n times concurrently and collect the answers.
+
+    Returns the answers that came back and the errors from the calls that did
+    not. Voting is where fan-out is widest, so it is also where a rate limit
+    is most likely to take a call down.
+    """
     workers = min(n, MAX_CONCURRENT_CALLS) or 1
+    answers: list[str] = []
+    errors: list[str] = []
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = [pool.submit(_ask_once, question) for _ in range(n)]
-        # Normalising before returning means 'Yes.' and 'yes' agree instead
-        # of reading as a split vote.
-        return [normalize_answer(future.result()) for future in futures]
+        for future in futures:
+            try:
+                # Normalising before returning means 'Yes.' and 'yes' agree
+                # instead of reading as a split vote.
+                answers.append(normalize_answer(future.result()))
+            except Exception as exc:
+                # A lost call costs one vote, not the batch. Agreement is then
+                # measured over the votes that arrived, and the caller is told
+                # how many did not so a thin sample is not mistaken for a
+                # confident one.
+                errors.append(f"{type(exc).__name__}: {exc}")
+    return (answers, errors)
 
 
 def majority(answers: list[str]) -> tuple[str, float]:
@@ -155,10 +171,15 @@ def main() -> int:
     print(merge_sections(results))
 
     question = "Is the following claim safe to publish: 'removes 100 percent of all contaminants forever'? Answer yes or no."
-    answers = vote(question, n=3)
+    answers, errors = vote(question, n=3)
     answer, agreement = majority(answers)
     print(f"\nvotes: {answers}")
-    print(f"majority answer: {answer!r} with agreement {agreement:.2f}")
+    for error in errors:
+        print(f"lost a vote: {error}")
+    print(
+        f"majority answer: {answer!r} with agreement {agreement:.2f} "
+        f"over {len(answers)} of 3 votes"
+    )
     return 0
 
 

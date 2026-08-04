@@ -29,9 +29,9 @@ Concurrency in Python costs almost nothing here, because the work is network-bou
 1. Implement `section`: split a review task into a fixed list of independent aspects, each with its own instruction.
 2. Implement `run_sections`: run one call per section concurrently with a `ThreadPoolExecutor`, and return results in the original section order regardless of completion order.
 3. Implement `merge_sections`: combine the section results into one report, keeping each section labelled rather than blending them into prose.
-4. Implement `vote`: run the same question n times concurrently and collect the answers.
+4. Implement `vote`: run the same question n times concurrently and return both the answers that came back and the errors from the calls that did not.
 5. Implement `majority`: return the most common answer together with the fraction of votes that agreed, breaking ties deterministically so the same votes always give the same result.
-6. Add a concurrency cap and handle a failed call by recording the error in that slot rather than losing the whole batch.
+6. Add a concurrency cap and handle a failed call by recording the error rather than losing the whole batch. This applies to both shapes: a section keeps its slot, and a lost vote costs one vote while agreement is measured over the votes that arrived.
 
 ## Verification
 
@@ -39,7 +39,7 @@ Concurrency in Python costs almost nothing here, because the work is network-bou
 pytest labs/track-1-patterns/04-parallelization/tests -v
 ```
 
-Aggregation and ordering are deterministic and tested offline. Passing means sectioning preserves order under out-of-order completion, majority picks the modal answer and reports the agreement fraction, ties resolve the same way every time, and one failed call does not lose the other results.
+Aggregation and ordering are deterministic and tested offline. Passing means sectioning preserves order under out-of-order completion, majority picks the modal answer and reports the agreement fraction, ties resolve the same way every time, and one failed call does not lose the other results in either shape.
 
 ## Going further
 

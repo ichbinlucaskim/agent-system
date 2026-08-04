@@ -26,12 +26,12 @@ A misroute rate is only meaningful against labelled data. Write down thirty or s
 
 ## Steps
 
-1. Define `ROUTES`: a dict mapping each route name to the specialized system prompt that handles it, including an `other` fallback.
-2. Implement `classify`: one model call that returns exactly one route name. Validate the returned label against `ROUTES` and fall back to `other` when it does not match.
+1. Define `ROUTES`: a dict mapping each route name to the specialized system prompt that handles it, including an `other` fallback. Then define `ROUTE_BOUNDARIES`: the rule that decides each case where two routes could both apply. A classifier cannot resolve an overlap nobody has settled.
+2. Implement `classify`: one model call that returns exactly one route name. Give it the closed label list and the boundary rules. Validate the returned label against `ROUTES` and fall back to `other` when it does not match.
 3. Implement `handle`: dispatch to the system prompt for the chosen route and return the answer.
 4. Implement `route_and_answer`: classify, dispatch, and return both the answer and the route taken, so the decision is visible to callers and to logs.
 5. Implement `misroute_rate`: run `classify` over a labelled list of `(question, expected_route)` pairs and return the fraction that disagree.
-6. Populate `LABELLED_SET` with at least a dozen examples covering every route including `other`, and record your baseline misroute rate in a comment.
+6. Populate `LABELLED_SET` with at least a dozen examples covering every route including `other`, add the boundary cases your rules decide, and record your baseline misroute rate in a comment. A set of only clear-cut questions scores well and detects nothing: the boundary rows are the ones that move when a rule changes.
 
 ## Verification
 

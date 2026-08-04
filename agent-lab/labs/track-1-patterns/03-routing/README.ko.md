@@ -26,12 +26,12 @@ misroute rate는 라벨링된 데이터가 있어야만 의미가 있습니다. 
 
 ## 단계
 
-1. `ROUTES`를 정의하세요. 각 경로 이름을 그 경로를 처리하는 특화 system prompt에 대응시키는 dict이며, `other` fallback을 포함합니다.
-2. `classify`를 구현하세요. 정확히 하나의 경로 이름을 반환하는 모델 호출입니다. 반환된 라벨을 `ROUTES`에 대해 검증하고 일치하지 않으면 `other`로 되돌립니다.
+1. `ROUTES`를 정의하세요. 각 경로 이름을 그 경로를 처리하는 특화 system prompt에 대응시키는 dict이며, `other` fallback을 포함합니다. 그다음 `ROUTE_BOUNDARIES`를 정의하세요. 두 경로가 모두 해당될 수 있는 각 경우에 어느 쪽이 이기는지 정한 규칙입니다. 아무도 결정하지 않은 겹침은 classifier가 해결해 줄 수 없습니다.
+2. `classify`를 구현하세요. 정확히 하나의 경로 이름을 반환하는 모델 호출입니다. 닫힌 라벨 목록과 경계 규칙을 함께 전달하세요. 반환된 라벨을 `ROUTES`에 대해 검증하고 일치하지 않으면 `other`로 되돌립니다.
 3. `handle`을 구현하세요. 선택된 경로의 system prompt로 dispatch하고 답변을 반환합니다.
 4. `route_and_answer`를 구현하세요. classify하고 dispatch한 뒤 답변과 선택된 경로를 함께 반환해서 호출자와 로그에 그 결정이 드러나게 합니다.
 5. `misroute_rate`를 구현하세요. `(question, expected_route)` 쌍의 라벨링된 리스트에 `classify`를 돌리고 불일치 비율을 반환합니다.
-6. `LABELLED_SET`을 `other`를 포함한 모든 경로를 다루는 예시 열두 개 이상으로 채우고, 기준 misroute rate를 주석으로 기록하세요.
+6. `LABELLED_SET`을 `other`를 포함한 모든 경로를 다루는 예시 열두 개 이상으로 채우고, 규칙으로 결정한 경계 케이스를 추가한 뒤, 기준 misroute rate를 주석으로 기록하세요. 명확한 질문만 모은 집합은 점수는 잘 나오지만 아무것도 감지하지 못합니다. 규칙이 바뀔 때 움직이는 것은 경계에 있는 항목들입니다.
 
 ## 검증
 

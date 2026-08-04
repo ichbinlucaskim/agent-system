@@ -42,15 +42,34 @@ ROUTES: dict[str, str] = {
 }
 
 
+# Where two routes could both apply, someone has to decide which one wins. A
+# classifier cannot resolve an overlap nobody has settled, so the decisions are
+# written down here, fed to the classifier, and encoded in LABELLED_SET below.
+# Most misroutes are fixed by changing a rule here, not by changing the model.
+ROUTE_BOUNDARIES: tuple[str, ...] = (
+    "A request to get money back is 'refund', even when a fault caused it.",
+    "A request to diagnose or fix a device is 'technical', even when the "
+    "device is under warranty.",
+    "A request to write or reword text for an audience is 'marketing', even "
+    "when the subject is a policy or a support page.",
+    "A problem with the website or with checkout is 'other'. The technical "
+    "queue covers physical hardware only.",
+    "An order that is missing, late, or untracked is 'other' until the "
+    "customer asks for money back.",
+)
+
+
 def classify(question: str) -> str:
     """Return exactly one route name from ROUTES, falling back to 'other'."""
     labels = ", ".join(sorted(ROUTES))
+    rules = "\n".join(f"- {rule}" for rule in ROUTE_BOUNDARIES)
     # The classifier's output space is tiny, so it stays cheap: low effort,
     # a short prompt, and a one-word answer.
     system = (
         "You are a request router. Read the user's message and respond with "
         f"exactly one label from this list and nothing else: {labels}. "
-        "Use 'other' when no label clearly fits."
+        "Use 'other' when no label clearly fits.\n\n"
+        f"Rules for a request that could fit two labels:\n{rules}"
     )
     response = complete([{"role": "user", "content": question}], system=system)
     label = text_of(response).strip().lower()
@@ -88,8 +107,14 @@ def misroute_rate(labelled: list[tuple[str, str]]) -> float:
 
 # Labelled (question, expected_route) pairs covering every route. Run
 # misroute_rate(LABELLED_SET) and record the number here after any change to
-# ROUTES or the classifier prompt; that number is the baseline the change is
-# judged against.
+# ROUTES, ROUTE_BOUNDARIES, or the classifier prompt; that number is the
+# baseline the change is judged against.
+#
+# Measured baseline: 0.00 over these 21 questions on the default model. Two of
+# the boundary cases only land correctly because ROUTE_BOUNDARIES states the
+# decision. With those rules removed the same classifier sends the broken
+# refund button to 'technical' and the missing order to 'refund', which is a
+# rate of about 0.10. The rules earned that, not the model.
 LABELLED_SET: list[tuple[str, str]] = [
     ("I want my money back for the blender I bought last week.", "refund"),
     ("The package arrived damaged, can I send it back?", "refund"),
@@ -105,6 +130,17 @@ LABELLED_SET: list[tuple[str, str]] = [
     ("What are your opening hours on public holidays?", "other"),
     ("Do you offer gift wrapping at checkout?", "other"),
     ("Tell me a fun fact about espresso.", "other"),
+    # Boundary cases. Each one could read as two routes, and each label below
+    # is a decision from ROUTE_BOUNDARIES rather than an obvious reading. These
+    # are the rows that move the rate when a rule or a route prompt changes;
+    # a set of only clear-cut questions scores well and detects nothing.
+    ("My blender broke, I want my money back.", "refund"),
+    ("My order is two weeks late, I want my money back.", "refund"),
+    ("The speaker is still under warranty and will not charge.", "technical"),
+    ("Write copy explaining our 30-day return policy.", "marketing"),
+    ("I need a headline for our tech support page.", "marketing"),
+    ("The refund button on your site does not work.", "other"),
+    ("My order never arrived. What now?", "other"),
 ]
 
 

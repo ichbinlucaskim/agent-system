@@ -12,10 +12,20 @@ from __future__ import annotations
 
 from typing import Any
 
+# TODO: step 1. Map each route name to the specialized system prompt that
+# handles it, and include an 'other' fallback. A classifier that must choose
+# will always choose, so input that fits no route needs somewhere to land.
+ROUTES: dict[str, str] = {}
+
+# TODO: step 1. Write down the rule that decides each case where two routes
+# could both apply, then feed these to the classifier. A classifier cannot
+# resolve an overlap nobody has settled.
+ROUTE_BOUNDARIES: tuple[str, ...] = ()
+
 
 def classify(question: str) -> str:
     """Return exactly one route name from ROUTES, falling back to 'other'."""
-    # TODO: step 2. Call the model with the closed list of route names, strip the response, and validate it against ROUTES before returning.
+    # TODO: step 2. Call the model with the closed list of route names and the boundary rules, strip the response, and validate it against ROUTES before returning.
     raise NotImplementedError
 
 
@@ -35,6 +45,13 @@ def misroute_rate(labelled: list[tuple[str, str]]) -> float:
     """Fraction of labelled questions the classifier sends to the wrong route."""
     # TODO: step 5. Run classify over each pair and divide disagreements by total. An empty list should return 0.0 rather than divide by zero.
     raise NotImplementedError
+
+
+# TODO: step 6. Fill this with at least a dozen (question, expected_route)
+# pairs covering every route, add the boundary cases your rules decide, then
+# run misroute_rate over it and record the number in a comment here. A set of
+# only clear-cut questions scores well and detects nothing.
+LABELLED_SET: list[tuple[str, str]] = []
 
 
 def main() -> int:

@@ -46,6 +46,28 @@ def test_classify_returns_a_known_route(monkeypatch):
     assert label == "refund"
 
 
+def test_the_classifier_is_told_the_boundary_rules(monkeypatch):
+    """Overlap decisions reach the classifier instead of living only in prose."""
+    seen: dict[str, str | None] = {}
+
+    def fake_complete(messages, *, system=None, **kwargs):
+        seen["system"] = system
+        return _fake_response("other")
+
+    monkeypatch.setattr(solution, "complete", fake_complete)
+    solution.classify("The refund button on your site does not work.")
+    assert solution.ROUTE_BOUNDARIES
+    for rule in solution.ROUTE_BOUNDARIES:
+        assert rule in seen["system"]
+
+
+def test_every_route_appears_in_the_labelled_set():
+    """A baseline is only meaningful if it exercises every route."""
+    covered = {expected for _, expected in solution.LABELLED_SET}
+    assert covered == set(solution.ROUTES)
+    assert len(solution.LABELLED_SET) >= 12
+
+
 def test_an_unrecognised_label_falls_back_to_other(monkeypatch):
     """A label outside ROUTES is untrusted output and must not propagate."""
     monkeypatch.setattr(

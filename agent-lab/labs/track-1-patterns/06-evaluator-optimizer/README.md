@@ -20,6 +20,8 @@ The evaluator needs criteria specific enough to grade independently. Asking whet
 
 Feedback must be threaded back into the next generation. If the second call does not see the critique, the loop is just resampling, and you would be better served by the voting pattern from lab 04, which at least runs the samples concurrently.
 
+Send the draft the critique refers to along with the critique. Ask for a fix while withholding the thing to fix and the model has no option but to rewrite from scratch, and a rewrite drops criteria the previous draft had already met: "make it shorter" lands and the call to action disappears, the next round restores the call to action and the length comes back. That is the main reason a score history looks like a random walk, and passing the draft forward removes most of it.
+
 Every loop needs two exits: a success condition and a budget. Stop when the score clears the target, and stop unconditionally at the maximum iteration count. Without the second exit, a task the model cannot satisfy will consume tokens until something else breaks.
 
 Track the best draft seen, not just the most recent one. Scores do not increase monotonically, and a third iteration can be worse than the second. Returning the highest-scoring draft along with its score and iteration number makes the loop's behaviour visible and its output defensible.
@@ -27,10 +29,10 @@ Track the best draft seen, not just the most recent one. Scores do not increase 
 ## Steps
 
 1. Write `CRITERIA` as a list of specific, independently gradeable checks. Vague criteria are the usual reason this pattern fails.
-2. Implement `generate`: produce a draft, optionally taking previous feedback as an additional instruction.
-3. Implement `evaluate`: score the draft against the criteria and return structured output with a score, a pass flag, and per-criterion feedback.
+2. Implement `generate`: produce a draft, optionally taking previous feedback and the draft that feedback refers to as additional instructions.
+3. Implement `evaluate`: score the draft against the criteria and return structured output with a score, a pass flag, and per-criterion feedback. What stops the loop is the caller's `target_score`, not the evaluator's flag; keep the flag in the history so the two can be seen disagreeing.
 4. Implement `is_done`: return True when the score clears the target or when the iteration budget is exhausted, and say which condition fired.
-5. Implement `refine`: run the loop, thread feedback into the next generation, keep the best draft seen, and return it with its score, its iteration, and the stop reason.
+5. Implement `refine`: run the loop, thread both the feedback and the draft it criticises into the next generation, keep the best draft seen, and return it with its score, its iteration, and the stop reason.
 6. Print the score history so a run that plateaus or regresses is visible at a glance.
 
 ## Verification
@@ -39,10 +41,11 @@ Track the best draft seen, not just the most recent one. Scores do not increase 
 pytest labs/track-1-patterns/06-evaluator-optimizer/tests -v
 ```
 
-The stopping logic is tested offline with a stubbed evaluator. Passing means the loop exits on a passing score, exits at the budget when no score ever passes, returns the best draft rather than the last, and threads the previous critique into the next generation.
+The stopping logic is tested offline with a stubbed evaluator. Passing means the loop exits on a passing score, exits at the budget when no score ever passes, returns the best draft rather than the last, threads both the previous critique and the draft it criticises into the next generation, and records the evaluator's verdict in the history.
 
 ## Going further
 
+- Drop the previous draft from `generate` so only the critique survives, run it several times, and compare the score histories. The swings widen before the ceiling drops.
 - Give the evaluator a different model from the generator and see whether the critiques get sharper.
 - Replace half the criteria with deterministic Python checks and note which ones no longer need a model call at all.
 - Log the score at each iteration across twenty runs and find the iteration count past which the average stops improving. That number is your real budget.

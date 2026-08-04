@@ -12,10 +12,16 @@ from __future__ import annotations
 
 from typing import Any
 
+# TODO: step 1. The checks the evaluator grades against, one string each.
+# Each has to be decidable on its own: "stays under 150 words" can be passed
+# or failed, "is well written" cannot. Vague criteria are the usual reason
+# this pattern fails, because the score they produce carries no information.
+CRITERIA: list[str] = []
 
-def generate(task: str, feedback: str | None = None) -> str:
-    """Produce a draft, optionally guided by the previous critique."""
-    # TODO: step 2. When feedback is present, include it as an explicit instruction. A loop whose second call cannot see the critique is only resampling.
+
+def generate(task: str, feedback: str | None = None, previous: str | None = None) -> str:
+    """Produce a draft, optionally revising the previous one from critique."""
+    # TODO: step 2. When feedback is present, include it as an explicit instruction, together with the previous draft it criticises. A loop whose second call cannot see the critique is only resampling, and one that sees the critique but not the draft has to rewrite from scratch and loses criteria it had already met.
     raise NotImplementedError
 
 
@@ -33,7 +39,7 @@ def is_done(evaluation: dict[str, Any], iteration: int, *, max_iterations: int, 
 
 def refine(task: str, *, max_iterations: int = 3, target_score: int = 8) -> dict[str, Any]:
     """Run the generate and evaluate loop under a fixed budget."""
-    # TODO: step 5. Thread feedback forward, track the best draft seen rather than the last one, and return {'draft', 'score', 'iteration', 'stop_reason', 'history'}.
+    # TODO: step 5. Thread both the feedback and the draft it criticises forward into the next generation, track the best draft seen rather than the last one, and return {'draft', 'score', 'iteration', 'stop_reason', 'history'}.
     raise NotImplementedError
 
 

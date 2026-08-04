@@ -32,16 +32,27 @@ def _criteria_block() -> str:
     )
 
 
-def generate(task: str, feedback: str | None = None) -> str:
-    """Produce a draft, optionally guided by the previous critique."""
+def generate(
+    task: str, feedback: str | None = None, previous: str | None = None
+) -> str:
+    """Produce a draft, optionally revising the previous one from critique."""
     system = (
         "You write short product announcements. Satisfy every one of these "
         f"criteria:\n{_criteria_block()}"
     )
     content = task
-    if feedback:
-        # The critique goes in as an explicit instruction. If the second
-        # call cannot see it, the loop is resampling, not refining.
+    if feedback and previous:
+        # The critique goes in as an explicit instruction, and so does the
+        # draft it criticised. Asking for a fix while withholding the thing
+        # to fix leaves the model no option but to rewrite from scratch,
+        # and a rewrite drops criteria the previous draft had already met.
+        # That is what turns the score history into a random walk.
+        content = (
+            f"{task}\n\nPrevious draft:\n{previous}\n\nA reviewer critiqued "
+            "that draft. Revise it so every point below is fixed, and keep "
+            f"everything that already satisfied the criteria:\n{feedback}"
+        )
+    elif feedback:
         content = (
             f"{task}\n\nA reviewer critiqued the previous draft. Fix every "
             f"point below without breaking the criteria:\n{feedback}"
@@ -105,15 +116,21 @@ def refine(
     history: list[dict[str, Any]] = []
     best_draft, best_score, best_iteration = "", -1, 0
     feedback: str | None = None
+    previous: str | None = None
     stop_reason = "no iterations ran"
 
     for iteration in range(1, max_iterations + 1):
-        draft = generate(task, feedback)
+        draft = generate(task, feedback, previous)
         evaluation = evaluate(task, draft)
+        # The evaluator's own pass flag is recorded but never used to stop
+        # the loop: target_score is the caller's bar and it is the one that
+        # decides. Keeping the flag makes a disagreement between the two
+        # visible instead of silent.
         history.append(
             {
                 "iteration": iteration,
                 "score": evaluation["score"],
+                "passed": evaluation["passed"],
                 "feedback": evaluation["feedback"],
             }
         )
@@ -133,6 +150,7 @@ def refine(
         if done:
             break
         feedback = evaluation["feedback"]
+        previous = draft
 
     return {
         "draft": best_draft,

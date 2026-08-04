@@ -34,21 +34,27 @@ solution = _load("lab06_solution", LAB_ROOT / "solution" / "main.py")
 def _stub_loop(monkeypatch, scores: list[int], feedbacks: list[str] | None = None):
     """Drive refine with scripted drafts and evaluations.
 
-    Returns the list of (task, feedback) pairs generate was called with, so
-    tests can check what the next iteration actually saw.
+    Returns the list of (task, feedback, previous) triples generate was
+    called with, so tests can check what the next iteration actually saw.
     """
-    generate_calls: list[tuple[str, str | None]] = []
+    generate_calls: list[tuple[str, str | None, str | None]] = []
     state = {"index": 0}
 
-    def fake_generate(task: str, feedback: str | None = None) -> str:
-        generate_calls.append((task, feedback))
+    def fake_generate(
+        task: str, feedback: str | None = None, previous: str | None = None
+    ) -> str:
+        generate_calls.append((task, feedback, previous))
         return f"draft {len(generate_calls)}"
 
     def fake_evaluate(task: str, draft: str) -> dict[str, Any]:
         index = state["index"]
         state["index"] += 1
         feedback = feedbacks[index] if feedbacks else f"feedback {index + 1}"
-        return {"score": scores[index], "passed": False, "feedback": feedback}
+        return {
+            "score": scores[index],
+            "passed": scores[index] >= 8,
+            "feedback": feedback,
+        }
 
     monkeypatch.setattr(solution, "generate", fake_generate)
     monkeypatch.setattr(solution, "evaluate", fake_evaluate)
@@ -94,6 +100,28 @@ def test_refine_threads_feedback_into_the_next_generation(monkeypatch):
     solution.refine("the task", max_iterations=3, target_score=8)
     assert generate_calls[0][1] is None
     assert generate_calls[1][1] == "shorten the opening"
+
+
+def test_refine_shows_the_previous_draft_to_the_next_generation(monkeypatch):
+    """The generator revises a draft it can see instead of rewriting blind.
+
+    A critique without the thing it criticises forces a rewrite from
+    scratch, which is how a run loses criteria it had already satisfied.
+    """
+    generate_calls = _stub_loop(monkeypatch, scores=[3, 9])
+    solution.refine("the task", max_iterations=3, target_score=8)
+    assert generate_calls[0][2] is None
+    assert generate_calls[1][2] == "draft 1"
+
+
+def test_history_records_the_evaluator_verdict_alongside_the_score(monkeypatch):
+    """The evaluator's pass flag is kept so it can disagree visibly."""
+    _stub_loop(monkeypatch, scores=[4, 9])
+    outcome = solution.refine("the task", max_iterations=2, target_score=10)
+    # The evaluator passed the second draft while the caller's bar of 10 did
+    # not, and the loop stopped on the budget rather than on the flag.
+    assert [entry["passed"] for entry in outcome["history"]] == [False, True]
+    assert "exhausted" in outcome["stop_reason"]
 
 
 def test_refine_records_the_score_history(monkeypatch):

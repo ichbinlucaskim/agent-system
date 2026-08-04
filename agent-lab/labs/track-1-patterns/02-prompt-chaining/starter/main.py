@@ -12,10 +12,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from common.tracing import StepRecord, Trace
 
-def extract_requirements(brief: str) -> list[str]:
+
+def extract_requirements(brief: str, step: StepRecord | None = None) -> list[str]:
     """Turn a free-form brief into a list of short requirement strings."""
     # TODO: step 1. Call the model with a system prompt that asks for one requirement per line, then parse the response into a list.
+    # TODO: step 6. Report this call's usage with step.record_usage(response) when a step record is given.
     raise NotImplementedError
 
 
@@ -25,21 +28,27 @@ def gate_requirements(requirements: list[str]) -> tuple[bool, str]:
     raise NotImplementedError
 
 
-def draft_spec(requirements: list[str]) -> str:
+def draft_spec(requirements: list[str], step: StepRecord | None = None) -> str:
     """Draft a specification from the gated requirements only."""
     # TODO: step 3. Pass the requirement list, not the original brief. Each step should see only what it needs.
     raise NotImplementedError
 
 
-def polish_spec(spec: str) -> str:
+def polish_spec(spec: str, step: StepRecord | None = None) -> str:
     """Rewrite the draft for clarity without adding requirements."""
     # TODO: step 4. Instruct the model to change wording only. Adding a requirement here would bypass the gate.
     raise NotImplementedError
 
 
-def run_chain(brief: str, *, max_retries: int = 1) -> dict[str, Any]:
+def run_chain(
+    brief: str,
+    *,
+    max_retries: int = 1,
+    trace: Trace | None = None,
+) -> dict[str, Any]:
     """Run the full chain and return every intermediate output."""
     # TODO: step 5. Run the three steps in order, apply the gate after step one, retry the failed step up to max_retries, and return a dict with keys requirements, gate, draft, final, and stopped_at.
+    # TODO: step 6. Wrap each model-backed step in trace.step(...) and hand the record to the step so its tokens land in the report.
     raise NotImplementedError
 
 

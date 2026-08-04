@@ -31,7 +31,7 @@ Chaining is the wrong tool when one call already does the job. Each extra step m
 3. Implement `draft_spec`: a second call that consumes only the gated requirement list, not the original brief.
 4. Implement `polish_spec`: a third call that rewrites the draft for clarity without adding requirements.
 5. Implement `run_chain`: run the three steps in order, apply the gate after step one, retry the failed step up to `max_retries`, and return every intermediate output so a failure is inspectable.
-6. Wire a `Trace` from `common.tracing` through the chain and print the report so each step's tokens and latency are visible.
+6. Wire a `Trace` from `common.tracing` through the chain: wrap each model-backed step in `trace.step(...)`, hand the record to the step so it can call `record_usage` on its response, and print the report so each step's tokens and latency are visible.
 
 ## Verification
 
@@ -46,6 +46,7 @@ The gate tests run offline and are the core of this lab: a gate you cannot test 
 - Measure the chain against a single call that does all three steps at once, on the same ten briefs, and compare cost against quality.
 - Make the gate call a model instead of plain Python, then argue for or against that choice on cost and reliability grounds.
 - Add a branch: when the gate fails twice, route to a clarifying question instead of retrying a third time.
+- Get the usage out the other way: have each step return its response object alongside its value, the way lab 00 argued for, and weigh that against the plainer return types you get by passing a step record down.
 
 ## Certification mapping
 

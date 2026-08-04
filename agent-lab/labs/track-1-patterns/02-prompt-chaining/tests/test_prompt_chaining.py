@@ -9,6 +9,9 @@ from __future__ import annotations
 import importlib.util
 import sys
 from pathlib import Path
+from types import SimpleNamespace
+
+from common.tracing import StepRecord
 
 
 def _load(name: str, path: Path):
@@ -60,10 +63,14 @@ def test_gate_accepts_a_well_formed_list():
 def test_run_chain_returns_every_intermediate_output(monkeypatch):
     """The result carries requirements, draft, and final for inspection."""
     monkeypatch.setattr(
-        solution, "extract_requirements", lambda brief: list(GOOD_REQUIREMENTS)
+        solution,
+        "extract_requirements",
+        lambda brief, step=None: list(GOOD_REQUIREMENTS),
     )
-    monkeypatch.setattr(solution, "draft_spec", lambda requirements: "the draft")
-    monkeypatch.setattr(solution, "polish_spec", lambda draft: "the final")
+    monkeypatch.setattr(
+        solution, "draft_spec", lambda requirements, step=None: "the draft"
+    )
+    monkeypatch.setattr(solution, "polish_spec", lambda draft, step=None: "the final")
 
     result = solution.run_chain("a brief")
     assert result["requirements"] == GOOD_REQUIREMENTS
@@ -74,9 +81,11 @@ def test_run_chain_returns_every_intermediate_output(monkeypatch):
 
 def test_run_chain_stops_when_the_gate_fails(monkeypatch):
     """A failed gate names itself in stopped_at and draft_spec never runs."""
-    monkeypatch.setattr(solution, "extract_requirements", lambda brief: ["vague"])
+    monkeypatch.setattr(
+        solution, "extract_requirements", lambda brief, step=None: ["vague"]
+    )
 
-    def draft_must_not_run(requirements):
+    def draft_must_not_run(requirements, step=None):
         raise AssertionError("draft_spec ran after a failed gate")
 
     monkeypatch.setattr(solution, "draft_spec", draft_must_not_run)
@@ -91,16 +100,73 @@ def test_run_chain_retries_the_failed_step_once(monkeypatch):
     """Only the failed step is retried: two extractions, one draft."""
     calls: list[str] = []
 
-    def extract(brief):
+    def extract(brief, step=None):
         calls.append(brief)
         # First attempt fails the gate, second succeeds.
         return [] if len(calls) == 1 else list(GOOD_REQUIREMENTS)
 
     monkeypatch.setattr(solution, "extract_requirements", extract)
-    monkeypatch.setattr(solution, "draft_spec", lambda requirements: "draft")
-    monkeypatch.setattr(solution, "polish_spec", lambda draft: "final")
+    monkeypatch.setattr(solution, "draft_spec", lambda requirements, step=None: "draft")
+    monkeypatch.setattr(solution, "polish_spec", lambda draft, step=None: "final")
 
     result = solution.run_chain("a brief", max_retries=1)
     assert len(calls) == 2
     assert result["stopped_at"] is None
     assert result["final"] == "final"
+
+
+def test_every_step_receives_a_trace_record(monkeypatch):
+    """The chain hands each step the record it should report usage into."""
+    seen: list[str] = []
+
+    def extract(brief, step=None):
+        seen.append(type(step).__name__)
+        return list(GOOD_REQUIREMENTS)
+
+    def draft(requirements, step=None):
+        seen.append(type(step).__name__)
+        return "the draft"
+
+    def polish(spec, step=None):
+        seen.append(type(step).__name__)
+        return "the final"
+
+    monkeypatch.setattr(solution, "extract_requirements", extract)
+    monkeypatch.setattr(solution, "draft_spec", draft)
+    monkeypatch.setattr(solution, "polish_spec", polish)
+
+    solution.run_chain("a brief")
+    assert seen == ["StepRecord", "StepRecord", "StepRecord"]
+
+
+def test_a_step_records_its_token_usage(monkeypatch):
+    """Token counts reach the trace, so the report prices the chain."""
+    monkeypatch.setattr(
+        solution,
+        "complete",
+        lambda messages, system=None, **kwargs: SimpleNamespace(
+            content=[SimpleNamespace(type="text", text="A requirement that is long enough.")],
+            usage=SimpleNamespace(input_tokens=11, output_tokens=7),
+        ),
+    )
+
+    record = StepRecord(name="extract_requirements")
+    solution.extract_requirements("a brief", step=record)
+    assert record.input_tokens == 11
+    assert record.output_tokens == 7
+
+
+def test_a_step_without_a_record_still_returns_its_value(monkeypatch):
+    """Tracing is optional: the step works when no record is supplied."""
+    monkeypatch.setattr(
+        solution,
+        "complete",
+        lambda messages, system=None, **kwargs: SimpleNamespace(
+            content=[SimpleNamespace(type="text", text="A requirement that is long enough.")],
+            usage=SimpleNamespace(input_tokens=11, output_tokens=7),
+        ),
+    )
+
+    assert solution.extract_requirements("a brief") == [
+        "A requirement that is long enough."
+    ]

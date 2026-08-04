@@ -11,15 +11,21 @@ from __future__ import annotations
 from typing import Any
 
 from common.client import complete, text_of
-from common.tracing import Trace
+from common.tracing import StepRecord, Trace
 
 # A requirement shorter than this many words is almost always too vague to
 # act on, and vague requirements are exactly what the gate exists to catch.
 MIN_WORDS_PER_REQUIREMENT = 4
 
 
-def extract_requirements(brief: str) -> list[str]:
-    """Turn a free-form brief into a list of short requirement strings."""
+def extract_requirements(brief: str, step: StepRecord | None = None) -> list[str]:
+    """Turn a free-form brief into a list of short requirement strings.
+
+    The optional step record is where this call reports its token usage. It is
+    passed down rather than having the caller read usage off a returned
+    response, so that each step can keep returning the plain value the next
+    step needs.
+    """
     system = (
         "You extract product requirements from a brief. Return one "
         "requirement per line as plain text, with no numbering and no "
@@ -27,6 +33,8 @@ def extract_requirements(brief: str) -> list[str]:
         "sentence. Return nothing except the requirements."
     )
     response = complete([{"role": "user", "content": brief}], system=system)
+    if step is not None:
+        step.record_usage(response)
     # Strip bullet characters anyway: instructions reduce formatting drift,
     # they do not eliminate it, and the gate should judge content, not markup.
     lines = [line.strip(" \t-*") for line in text_of(response).splitlines()]
@@ -52,7 +60,7 @@ def gate_requirements(requirements: list[str]) -> tuple[bool, str]:
     return (True, f"gate passed: {len(requirements)} actionable requirements.")
 
 
-def draft_spec(requirements: list[str]) -> str:
+def draft_spec(requirements: list[str], step: StepRecord | None = None) -> str:
     """Draft a specification from the gated requirements only."""
     # The draft sees the gated list, not the original brief. Each step gets
     # only what it needs, so a bad draft traces back to a bad list.
@@ -65,10 +73,12 @@ def draft_spec(requirements: list[str]) -> str:
         "the list, and use plain prose with a short section per requirement."
     )
     response = complete([{"role": "user", "content": numbered}], system=system)
+    if step is not None:
+        step.record_usage(response)
     return text_of(response)
 
 
-def polish_spec(spec: str) -> str:
+def polish_spec(spec: str, step: StepRecord | None = None) -> str:
     """Rewrite the draft for clarity without adding requirements."""
     system = (
         "You are a copy editor. Rewrite the specification for clarity and "
@@ -77,6 +87,8 @@ def polish_spec(spec: str) -> str:
         "and after your edit."
     )
     response = complete([{"role": "user", "content": spec}], system=system)
+    if step is not None:
+        step.record_usage(response)
     return text_of(response)
 
 
@@ -100,7 +112,7 @@ def run_chain(
     # again for steps that already succeeded.
     for attempt in range(max_retries + 1):
         with trace.step("extract_requirements", attempt=attempt) as step:
-            result["requirements"] = extract_requirements(brief)
+            result["requirements"] = extract_requirements(brief, step=step)
             step.output = result["requirements"]
         result["gate"] = gate_requirements(result["requirements"])
         if result["gate"][0]:
@@ -113,11 +125,11 @@ def run_chain(
         return result
 
     with trace.step("draft_spec") as step:
-        result["draft"] = draft_spec(result["requirements"])
+        result["draft"] = draft_spec(result["requirements"], step=step)
         step.output = result["draft"]
 
     with trace.step("polish_spec") as step:
-        result["final"] = polish_spec(result["draft"])
+        result["final"] = polish_spec(result["draft"], step=step)
         step.output = result["final"]
 
     return result

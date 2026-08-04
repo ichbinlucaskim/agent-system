@@ -48,6 +48,7 @@ Retrieval, memory, and tool dispatch are deterministic, so their tests run offli
 - Weaken the `get_stock_level` description to just `Get stock.` and re-run the stock question. Lab 07 turns this observation into a measurement.
 - Add a second tool that overlaps with the first and see which one the model picks.
 - Replace token-overlap retrieval with the vector store from lab 08 and compare which documents come back for the same questions.
+- Run `main` and read the second answer closely. If the model retracts something it said in the first answer, check what retrieval returned for the second question. The system prompt is rebuilt from the current question every call while memory accumulates, so an earlier answer can outlive the document that grounded it. Lab 11 is where that gets fixed.
 
 ## Certification mapping
 

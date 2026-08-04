@@ -48,6 +48,7 @@ retrieval, memory, tool dispatch는 결정적이므로 해당 테스트는 오�
 - `get_stock_level`의 description을 `Get stock.` 정도로 약화시키고 재고 질문을 다시 실행하세요. lab 07에서는 이 관찰을 측정으로 바꿉니다.
 - 첫 번째 tool과 기능이 겹치는 두 번째 tool을 추가하고 모델이 어느 쪽을 선택하는지 보세요.
 - token 겹침 기반 retrieval을 lab 08의 vector store로 교체하고 같은 질문에 어떤 문서가 돌아오는지 비교하세요.
+- `main`을 실행하고 두 번째 답변을 자세히 읽어 보세요. 모델이 첫 답변에서 한 말을 철회한다면, 두 번째 질문에 대해 retrieval이 무엇을 반환했는지 확인하세요. system prompt는 호출마다 현재 질문으로 새로 만들어지는데 memory는 누적되므로, 어떤 답변이 그것을 뒷받침한 문서보다 오래 남을 수 있습니다. 이 문제는 lab 11에서 다룹니다.
 
 ## 인증 시험 매핑
 

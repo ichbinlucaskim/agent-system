@@ -31,13 +31,51 @@ LAB_ROOT = Path(__file__).resolve().parents[1]
 solution = _load("lab07_solution", LAB_ROOT / "solution" / "main.py")
 
 
-def test_both_tool_definitions_are_structurally_valid():
+def test_every_tool_definition_is_structurally_valid():
     """Each tool has a name, a description, and an object input_schema."""
-    for tool in (solution.GOOD_TOOL, solution.VAGUE_TOOL):
+    tools = (
+        solution.GOOD_TOOL,
+        solution.VAGUE_TOOL,
+        solution.TRIGGER_ONLY_TOOL,
+        solution.SCHEMA_ONLY_TOOL,
+        solution.DOCS_TOOL,
+    )
+    for tool in tools:
         assert tool["name"]
         assert tool["description"]
         assert tool["input_schema"]["type"] == "object"
         assert isinstance(tool["input_schema"]["properties"], dict)
+
+
+def test_the_variants_differ_in_exactly_one_field_each():
+    """The two middle variants isolate the wording and the schema.
+
+    Without them the good and vague definitions differ in several fields at
+    once and no single change can be credited for the difference.
+    """
+    good, vague = solution.GOOD_TOOL, solution.VAGUE_TOOL
+    trigger_only, schema_only = solution.TRIGGER_ONLY_TOOL, solution.SCHEMA_ONLY_TOOL
+
+    assert trigger_only["description"] == good["description"]
+    assert trigger_only["input_schema"] == vague["input_schema"]
+    assert schema_only["description"] == vague["description"]
+    assert schema_only["input_schema"] == good["input_schema"]
+    # Every variant is the same tool, so selection differences cannot be
+    # explained by the name.
+    names = {tool["name"] for tool in (good, vague, trigger_only, schema_only)}
+    assert names == {"get_stock_level"}
+
+
+def test_the_cases_put_the_two_tools_in_competition():
+    """Some cases belong to the docs tool, which is what creates a decision.
+
+    A lone tool is selected for anything vaguely related to it, so a case
+    set that only ever expects one tool cannot detect a bad description.
+    """
+    expected = {expectation for _, expectation in solution.CASES}
+    assert "get_stock_level" in expected
+    assert "search_product_docs" in expected
+    assert None in expected
 
 
 def test_the_good_description_states_a_trigger_condition():
@@ -87,3 +125,24 @@ def test_selection_rate_matches_a_hand_counted_example(monkeypatch):
     )
     assert solution.selection_rate(cases, [solution.GOOD_TOOL]) == 0.75
     assert solution.selection_rate([], [solution.GOOD_TOOL]) == 0.0
+
+
+def test_compare_descriptions_varies_one_tool_against_a_fixed_competitor(monkeypatch):
+    """Four rates come back, and every run sees the same docs tool."""
+    seen: list[list[dict[str, object]]] = []
+
+    def fake_select_tool(question: str, tools: list[dict[str, object]]):
+        seen.append(tools)
+        return "get_stock_level"
+
+    monkeypatch.setattr(solution, "select_tool", fake_select_tool)
+    rates = solution.compare_descriptions([("q1", "get_stock_level")])
+
+    assert set(rates) == {"vague", "trigger_only", "schema_only", "good"}
+    assert len(seen) == 4
+    for tools in seen:
+        assert [tool["name"] for tool in tools] == [
+            "get_stock_level",
+            "search_product_docs",
+        ]
+        assert tools[1] == solution.DOCS_TOOL

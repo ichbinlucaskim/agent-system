@@ -41,7 +41,7 @@ A citation is only worth something if it is checkable. Return the retrieved chun
 pytest labs/track-2-tools-context/08-rag-basics/tests -v
 ```
 
-The whole pipeline except the final generation is deterministic and runs offline. Passing means chunks respect the size and overlap settings, the same text always embeds to the same vector, a query retrieves the chunk that actually contains the answer, and the store survives a save and load round trip unchanged.
+The whole pipeline except the final generation is deterministic and runs offline. Passing means chunks respect the size and overlap settings, the same text always embeds to the same vector, a query retrieves the chunk that actually contains the answer, the store survives a save and load round trip unchanged, and a **separate process** reloading it ranks the chunks in the same order. That last one is only checked by actually crossing a process boundary: within one process the round trip passes even with the builtin `hash()`, whose salt changes from run to run.
 
 ## Going further
 

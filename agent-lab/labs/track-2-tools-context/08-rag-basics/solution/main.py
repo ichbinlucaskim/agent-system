@@ -150,7 +150,11 @@ def main() -> int:
     store.save(path)
     reloaded = VectorStore.load(path)
     same = [hit.id for hit in search(reloaded, query)] == [hit.id for hit in hits]
-    print(f"\nsave and load round trip identical: {same}")
+    # Same-process only, which is the weaker half of the guarantee: a store is
+    # useful across runs, so what matters is that a later process ranks these
+    # chunks identically. That is why embed uses md5 rather than the builtin
+    # hash, and the tests cross a real process boundary to prove it.
+    print(f"\nsave and load round trip identical, same process: {same}")
 
     try:
         result = answer(query, store)

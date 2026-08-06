@@ -16,6 +16,11 @@ import numpy as np
 
 from common.vectorstore import SearchHit, VectorStore
 
+# A few short policy documents to retrieve from. Keep them small enough that
+# you can check a citation by eye, and make sure they disagree about nothing,
+# so a wrong answer means the pipeline is wrong rather than the corpus.
+CORPUS: dict[str, str] = {}
+
 
 def chunk(text: str, *, size: int = 400, overlap: int = 50) -> list[str]:
     """Split text into overlapping windows of roughly `size` characters."""
@@ -49,6 +54,13 @@ def answer(query: str, store: VectorStore, k: int = 3) -> dict[str, Any]:
 
 def main() -> int:
     """Run the lab end to end and print what happened."""
+    # TODO: step 6. Save the store to data/ as sqlite3 and load it back. Then
+    # check the harder half: a *new process* must rank the same chunks in the
+    # same order. That is the whole reason step 2 hashes with md5 instead of
+    # the builtin hash, which is salted per process and would silently rank
+    # the wrong chunk first on the next run. A same-process round trip passes
+    # either way, so it cannot tell you anything about this.
+    #
     # TODO: final step. Wire the functions above together and print
     # enough that the behaviour described in the README is visible.
     raise NotImplementedError

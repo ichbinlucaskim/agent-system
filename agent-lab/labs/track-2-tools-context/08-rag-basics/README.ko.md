@@ -41,7 +41,7 @@ grounding은 사람들이 건너뛰는 부분입니다. prompt에서 강제되�
 pytest labs/track-2-tools-context/08-rag-basics/tests -v
 ```
 
-최종 생성을 제외한 pipeline 전체는 결정적이며 오프라인으로 실행됩니다. 통과했다면 chunk가 크기와 overlap 설정을 지키고, 같은 텍스트가 항상 같은 vector로 embedding되며, 질의가 실제로 답을 담은 chunk를 검색해 오고, store가 저장과 로드 왕복을 거쳐도 변하지 않는다는 뜻입니다.
+최종 생성을 제외한 pipeline 전체는 결정적이며 오프라인으로 실행됩니다. 통과했다면 chunk가 크기와 overlap 설정을 지키고, 같은 텍스트가 항상 같은 vector로 embedding되며, 질의가 실제로 답을 담은 chunk를 검색해 오고, store가 저장과 로드 왕복을 거쳐도 변하지 않으며, **별도 프로세스**에서 다시 불러와도 순위가 같다는 뜻입니다. 마지막 항목은 프로세스 경계를 실제로 넘어야만 검사됩니다. 같은 프로세스 안에서는 프로세스마다 salt가 달라지는 builtin `hash()`로도 왕복이 통과하기 때문입니다.
 
 ## 더 나아가기
 

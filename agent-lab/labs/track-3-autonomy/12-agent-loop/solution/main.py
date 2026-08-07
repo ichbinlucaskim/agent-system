@@ -127,9 +127,10 @@ def detect_no_progress(history: list[tuple[str, str]], *, window: int = 3) -> bo
     if len(history) < window:
         return False
     # A stuck agent does not crash, it repeats: same call, same result, same
-    # confidence. Identical hashes across the window are that signature.
-    digests = {hash(pair) for pair in history[-window:]}
-    return len(digests) == 1
+    # confidence. Compare the pairs themselves — action alone is not enough,
+    # because a changing observation is still progress.
+    recent = history[-window:]
+    return len(set(recent)) == 1
 
 
 def _cost_of(response: Any) -> float:
@@ -148,18 +149,20 @@ def agent_loop(
     tools: list[dict[str, Any]] | None = None,
     model_call: Callable[[list[dict[str, Any]]], Any] | None = None,
     executor: Callable[[dict[str, Any]], str] | None = None,
+    state: RunState | None = None,
 ) -> dict[str, Any]:
     """Run the autonomous loop until done or stopped.
 
-    model_call and executor exist so tests can drive the loop with a stub;
-    by default it talks to the real model and the real tools.
+    model_call, executor, and state exist so tests can drive the loop with a
+    stub and a pre-aged clock; by default it talks to the real model and the
+    real tools with a fresh RunState.
     """
     tools = TOOLS if tools is None else tools
     call = model_call or (
         lambda messages: complete_with_tools(messages, tools, system=SYSTEM)
     )
     trace = Trace("agent-loop")
-    state = RunState()
+    state = RunState() if state is None else state
     messages: list[dict[str, Any]] = [{"role": "user", "content": task}]
     history: list[tuple[str, str]] = []
     answer = ""
@@ -250,19 +253,47 @@ def _scripted_model(vary_arguments: bool) -> Callable[[list[dict[str, Any]]], An
 
 def main() -> int:
     """Run scripted loops offline and print which condition stopped each."""
-    budget = AgentBudget(max_steps=4, max_usd=1.0, max_seconds=30.0)
-
-    busy = agent_loop(
-        "Check every order.", budget=budget, model_call=_scripted_model(True)
+    # Three independent budgets, each shown firing on its own.
+    by_steps = agent_loop(
+        "Check every order.",
+        budget=AgentBudget(max_steps=4, max_usd=100.0, max_seconds=30.0),
+        model_call=_scripted_model(True),
     )
-    print(f"busy run stopped by {busy['stop_reason']} after {busy['steps']} steps")
-    print(busy["trace"].render_text_report())
+    print(
+        f"step budget stopped by {by_steps['stop_reason']} "
+        f"after {by_steps['steps']} steps"
+    )
+    print(by_steps["trace"].render_text_report())
+    print()
+
+    by_cost = agent_loop(
+        "Check every order.",
+        budget=AgentBudget(max_steps=100, max_usd=0.001, max_seconds=30.0),
+        model_call=_scripted_model(True),
+    )
+    print(
+        f"cost ceiling stopped by {by_cost['stop_reason']} "
+        f"after {by_cost['steps']} steps (${by_cost['usd']:.6f})"
+    )
+    print()
+
+    # A deadline already in the past: the loop refuses the first step.
+    late = RunState()
+    late.started = time.perf_counter() - 10.0
+    spent, which = is_exhausted(
+        AgentBudget(max_steps=100, max_usd=100.0, max_seconds=1.0), late
+    )
+    print(f"wall-clock check: exhausted={spent} reason={which}")
     print()
 
     stuck = agent_loop(
-        "Check order A-100.", budget=budget, model_call=_scripted_model(False)
+        "Check order A-100.",
+        budget=AgentBudget(max_steps=10, max_usd=100.0, max_seconds=30.0),
+        model_call=_scripted_model(False),
     )
-    print(f"stuck run stopped by {stuck['stop_reason']} after {stuck['steps']} steps")
+    print(
+        f"stuck run stopped by {stuck['stop_reason']} after {stuck['steps']} steps"
+    )
     print()
 
     calls = {"n": 0}

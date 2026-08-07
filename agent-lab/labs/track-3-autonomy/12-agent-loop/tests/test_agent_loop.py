@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+import time
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -65,6 +66,22 @@ def _tool_model(vary_arguments: bool):
     return call
 
 
+def _has_tool_result(messages) -> bool:
+    """True when the latest user turn carries at least one tool_result."""
+    if not messages:
+        return False
+    last = messages[-1]
+    if last.get("role") != "user":
+        return False
+    content = last.get("content")
+    if not isinstance(content, list):
+        return False
+    return any(
+        isinstance(block, dict) and block.get("type") == "tool_result"
+        for block in content
+    )
+
+
 def test_the_loop_stops_at_the_step_budget():
     """A model that never finishes is stopped by max_steps, by name."""
     budget = solution.AgentBudget(max_steps=3, max_usd=100.0, max_seconds=60.0)
@@ -86,6 +103,30 @@ def test_the_cost_ceiling_stops_a_run_before_the_step_budget(monkeypatch):
     )
     assert result["stop_reason"] == "max_usd"
     assert result["steps"] < budget.max_steps
+
+
+def test_the_wall_clock_deadline_stops_a_run_before_any_step():
+    """A deadline already in the past refuses the first step by name."""
+    budget = solution.AgentBudget(max_steps=100, max_usd=100.0, max_seconds=1.0)
+    aged = solution.RunState()
+    aged.started = time.perf_counter() - 10.0
+    result = solution.agent_loop(
+        "Check every order.",
+        budget=budget,
+        model_call=_tool_model(True),
+        state=aged,
+    )
+    assert result["stop_reason"] == "max_seconds"
+    assert result["steps"] == 0
+
+
+def test_is_exhausted_names_the_wall_clock_budget():
+    """is_exhausted reports max_seconds when only time has run out."""
+    budget = solution.AgentBudget(max_steps=100, max_usd=100.0, max_seconds=1.0)
+    state = solution.RunState(steps=0, usd=0.0, started=time.perf_counter() - 5.0)
+    spent, which = solution.is_exhausted(budget, state)
+    assert spent is True
+    assert which == "max_seconds"
 
 
 def test_run_tool_with_retry_retries_then_surrenders():
@@ -138,6 +179,16 @@ def test_detect_no_progress_ignores_genuine_variety():
     assert solution.detect_no_progress(history) is False
 
 
+def test_detect_no_progress_requires_the_observation_too():
+    """The same action with a changing observation is still progress."""
+    history = [
+        ("lookup_order([('order_id', 'A-100')])", "Order A-100: pending."),
+        ("lookup_order([('order_id', 'A-100')])", "Order A-100: packing."),
+        ("lookup_order([('order_id', 'A-100')])", "Order A-100: shipped."),
+    ]
+    assert solution.detect_no_progress(history) is False
+
+
 def test_every_exit_path_sets_a_stop_reason():
     """Success and stagnation both name their stop reason, so a caller
     never has to infer why a run ended."""
@@ -157,3 +208,48 @@ def test_every_exit_path_sets_a_stop_reason():
         "Check A-100.", budget=budget, model_call=_tool_model(False)
     )
     assert stuck["stop_reason"] == "no_progress"
+
+
+def test_the_loop_feeds_tool_results_back_to_the_model():
+    """The model only finishes after it has seen a tool_result. Forgetting
+    to append results leaves the stub asking forever and hits max_steps."""
+    calls = {"n": 0}
+
+    def attentive(messages):
+        calls["n"] += 1
+        if _has_tool_result(messages):
+            block = SimpleNamespace(type="text", text="Order A-100 is shipped.")
+            return SimpleNamespace(
+                content=[block], stop_reason="end_turn", usage=_usage()
+            )
+        block = SimpleNamespace(
+            type="tool_use",
+            id="toolu_1",
+            name="lookup_order",
+            input={"order_id": "A-100"},
+        )
+        return SimpleNamespace(
+            content=[block], stop_reason="tool_use", usage=_usage()
+        )
+
+    budget = solution.AgentBudget(max_steps=5, max_usd=100.0, max_seconds=60.0)
+    result = solution.agent_loop(
+        "Check A-100.", budget=budget, model_call=attentive
+    )
+    assert result["stop_reason"] == "completed"
+    assert result["answer"] == "Order A-100 is shipped."
+    assert result["steps"] == 2
+    assert calls["n"] == 2
+
+
+def test_the_loop_records_a_trace_of_every_step():
+    """Step 6's Trace is part of the return value and counts every step."""
+    budget = solution.AgentBudget(max_steps=3, max_usd=100.0, max_seconds=60.0)
+    result = solution.agent_loop(
+        "Check every order.", budget=budget, model_call=_tool_model(True)
+    )
+    trace = result["trace"]
+    assert trace is not None
+    assert len(trace.records) == result["steps"] == 3
+    assert trace.total_input_tokens == 600
+    assert "step-1" in trace.render_text_report()

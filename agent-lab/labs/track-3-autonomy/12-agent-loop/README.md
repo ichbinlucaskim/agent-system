@@ -22,7 +22,7 @@ Give the loop several independent budgets, because they fail differently. A step
 
 Tool failures are normal and are usually transient. Retry a failed tool once or twice, then return the error to the model as a tool result so it can choose a different approach. Distinguish the two clearly: a retry is you deciding to try again, and returning the error is the model deciding what to do next.
 
-The hardest stop condition is non-progress. A stuck agent does not crash; it calls the same tool with the same arguments, gets the same result, and remains confident. Detect it by hashing recent action and observation pairs and stopping when the recent window is all repeats, because a step budget alone will let that spin for its whole allowance.
+The hardest stop condition is non-progress. A stuck agent does not crash; it calls the same tool with the same arguments, gets the same result, and remains confident. Detect it by comparing recent action and observation pairs and stopping when the recent window is all repeats, because a step budget alone will let that spin for its whole allowance. The observation matters: the same call with a changing result is still progress.
 
 Whatever ends the run, the result must say why. A returned object carrying the answer, the stop reason, the step count, and the spend is the difference between an agent you can operate and one you can only restart.
 
@@ -31,9 +31,9 @@ Whatever ends the run, the result must say why. A returned object carrying the a
 1. Define `AgentBudget`: a dataclass with `max_steps`, `max_usd`, and `max_seconds`, and a `RunState` that tracks steps taken, spend, and elapsed time.
 2. Implement `is_exhausted`: return whether any budget is spent and which one, so the caller learns the reason and not just the fact.
 3. Implement `run_tool_with_retry`: retry a failing tool a fixed number of times, then return the error as a tool result rather than raising.
-4. Implement `detect_no_progress`: hash recent action and observation pairs and return True when the last few are all identical.
-5. Implement `agent_loop`: run until the model stops asking for tools, a budget is exhausted, or non-progress is detected. Return the answer, the stop reason, the step count, and the spend.
-6. Attach a `Trace` from `common.tracing` so each step is recorded, then print the report for a run that hits its budget.
+4. Implement `detect_no_progress`: return True when the last few action and observation pairs are identical. Compare the pairs themselves — a repeated action with a changing observation is still progress.
+5. Implement `agent_loop`: run until the model stops asking for tools, a budget is exhausted, or non-progress is detected. Check budgets before each step, append tool results so the next model call can see them, and return the answer, the stop reason, the step count, the spend, and the trace.
+6. Attach a `Trace` from `common.tracing` so each step is recorded, then print the report for a run that hits its step budget. In `main`, also show a cost-ceiling stop and a wall-clock check so all three budgets are visible.
 
 ## Verification
 
@@ -41,7 +41,7 @@ Whatever ends the run, the result must say why. A returned object carrying the a
 pytest labs/track-3-autonomy/12-agent-loop/tests -v
 ```
 
-Every budget and detector is tested offline with a stubbed model. Passing means the loop stops at the step budget, stops at the cost ceiling before the step budget when spend is high, retries a failing tool the configured number of times and then surrenders to the model, detects a repeated action loop, and always returns a stop reason naming the condition that fired.
+Every budget and detector is tested offline with a stubbed model. Passing means the loop stops at the step budget, stops at the cost ceiling before the step budget when spend is high, stops at the wall-clock deadline before taking a step when time is already up, retries a failing tool the configured number of times and then surrenders to the model, detects a repeated action-and-observation loop (not action alone), feeds tool results back into the next model call, records a Trace of every step, and always returns a stop reason naming the condition that fired.
 
 ## Going further
 

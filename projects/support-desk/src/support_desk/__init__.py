@@ -1,12 +1,21 @@
 """Support desk: layered worked example of system-design case 06.
 
-Package layout matches the five layers:
+Purpose
+    Expose the package version and document the five-layer layout that mirrors
+    the case study: tools_gate → routing → agent → evaluation → packaging.
 
-1. ``tools_gate``   — tools, HITL, DB, policy retrieval, guardrails
-2. ``routing``      — FAQ vs account
-3. ``agent``        — loop, budgets, stop reasons
-4. ``evaluation``   — action-level suite and reports
-5. ``packaging``    — config, CLI/HTTP, smoke, MCP adapter
+Why
+    Case 06 teaches that permission, routing, budgets, eval, and adapters are
+    separate concerns. Matching the package tree to those layers makes the
+    teaching points discoverable in code, not only in prose.
+
+Trade-offs
+    Layers import downward (packaging → agent → tools_gate). Package ``__init__``
+    files stay thin to avoid import cycles between agent and packaging.
+
+Edges
+    Import concrete submodules (e.g. ``support_desk.agent.loop``) rather than
+    relying on re-exports from this root.
 """
 
 __version__ = "0.1.0"

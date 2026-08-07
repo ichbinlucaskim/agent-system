@@ -1,4 +1,26 @@
-"""Agent loop with budgets and stop reasons (lab 12), plus FAQ path."""
+"""Agent loop with budgets and stop reasons (lab 12), plus FAQ path.
+
+Purpose
+    Orchestrate customer handling: input guardrails, route selection, a cheap
+    FAQ completion, or a budgeted account tool loop that always runs side
+    effects through ``guarded_execute``.
+
+Why
+    This is the agent layer. Models propose tool uses; code owns budgets, stop
+    reasons, and the guarantee that confirm/forbidden tools hit the policy gate.
+    Packaging and eval call ``handle_message`` so they never reimplement the
+    loop.
+
+Trade-offs
+    Default approver auto-approves when none is passed (smoke convenience).
+    Cost charging swallows unknown-model errors so budgets may under-count.
+    FAQ path never offers side-effect tools.
+
+Edges
+    Exhausted budgets return ``stop_reason`` of ``max_steps`` / ``max_usd`` /
+    ``max_seconds`` with a short stopped answer. Input failures route
+    ``refused`` without calling the model.
+"""
 
 from __future__ import annotations
 
@@ -29,6 +51,24 @@ SYSTEM = (
 
 @dataclass(frozen=True)
 class AgentBudget:
+    """Hard caps on account-loop steps, spend, and wall time.
+
+    Purpose
+        Bundle ``max_steps``, ``max_usd``, and ``max_seconds`` for exhaustion
+        checks.
+
+    Why
+        Lab 12: unbounded tool loops are a failure mode. Explicit budgets make
+        stop reasons testable.
+
+    Trade-offs
+        Defaults are teaching-scale (8 steps, $1, 120s). Frozen dataclass
+        prevents mid-run mutation.
+
+    Edges
+        ``run_account`` may override from ``Config`` for steps/usd only.
+    """
+
     max_steps: int = 8
     max_usd: float = 1.0
     max_seconds: float = 120.0
@@ -36,16 +76,60 @@ class AgentBudget:
 
 @dataclass
 class RunState:
+    """Mutable counters for one account-loop run.
+
+    Purpose
+        Track steps taken, estimated USD, and start time for budget checks.
+
+    Why
+        Keeps exhaustion logic pure against ``AgentBudget`` without globals.
+
+    Trade-offs
+        ``usd`` depends on successful cost estimation; failures leave it low.
+
+    Edges
+        ``started`` defaults to ``time.perf_counter()`` at construction.
+    """
+
     steps: int = 0
     usd: float = 0.0
     started: float = field(default_factory=time.perf_counter)
 
     @property
     def elapsed_s(self) -> float:
+        """Seconds since this run state was created.
+
+        Purpose
+            Feed the ``max_seconds`` budget check.
+
+        Why
+            Wall-clock stop avoids hung loops when model calls stall.
+
+        Trade-offs
+            Uses monotonic performance counter, not calendar time.
+
+        Edges
+            Always non-negative for normal clocks.
+        """
         return time.perf_counter() - self.started
 
 
 def is_exhausted(budget: AgentBudget, state: RunState) -> tuple[bool, str]:
+    """Return whether any budget axis is spent, plus a stop reason label.
+
+    Purpose
+        Gate each account-loop iteration before the next model call.
+
+    Why
+        Centralizes stop-reason strings used in payloads and reports.
+
+    Trade-offs
+        Checks steps, then usd, then seconds—first match wins if several trip
+        at once.
+
+    Edges
+        Not exhausted → ``(False, "")``.
+    """
     if state.steps >= budget.max_steps:
         return (True, "max_steps")
     if state.usd >= budget.max_usd:
@@ -71,7 +155,24 @@ def run_faq(
     complete_fn: Callable[..., Any] = complete,
     trace: Trace | None = None,
 ) -> dict[str, Any]:
-    """Cheap path: retrieve policy passages, one model call, no side-effect tools."""
+    """Cheap path: retrieve policy passages, one model call, no side-effect tools.
+
+    Purpose
+        Answer policy questions from retrieved passages and return a standard
+        result dict.
+
+    Why
+        FAQ should not expose refund/cancel tools. One retrieval + one complete
+        keeps cost and blast radius low.
+
+    Trade-offs
+        Injects passages into the system prompt rather than a tool call—simpler
+        than a tool loop, less like the account path.
+
+    Edges
+        No hits → passages string ``(none)``. ``stop_reason`` is ``completed``.
+        ``tool_calls`` / ``audits`` are empty.
+    """
     trace = trace or Trace(name="faq")
     with trace.step("search_policy", query=message) as step:
         hits = search_policy(ctx.policy_store, message, k=3)
@@ -111,7 +212,25 @@ def run_account(
     budget: AgentBudget | None = None,
     trace: Trace | None = None,
 ) -> dict[str, Any]:
-    """Agent loop for account-changing requests."""
+    """Agent loop for account-changing requests.
+
+    Purpose
+        Alternate model tool proposals with ``guarded_execute`` until the model
+        stops calling tools or a budget is exhausted.
+
+    Why
+        Account risk lives here: every tool use is gated, audited, and charged
+        against budgets before the next step.
+
+    Trade-offs
+        Budget defaults come from config for steps/usd; ``max_seconds`` stays on
+        ``AgentBudget`` unless a full budget object is passed. Injected
+        ``complete_with_tools_fn`` enables offline scripted eval.
+
+    Edges
+        No tool uses → return final text with ``schema_ok``. Exhaustion →
+        ``Stopped: {reason}`` answer. Audits accumulate every gate record.
+    """
     budget = budget or AgentBudget(
         max_steps=config.max_steps, max_usd=config.max_usd
     )
@@ -193,7 +312,24 @@ def handle_message(
     complete_with_tools_fn: Callable[..., Any] = complete_with_tools,
     forced_route: str | None = None,
 ) -> dict[str, Any]:
-    """Single entry used by CLI, HTTP, and eval."""
+    """Single entry used by CLI, HTTP, and eval.
+
+    Purpose
+        Guard input, choose route (or honor ``forced_route``), and dispatch to
+        FAQ or account.
+
+    Why
+        One core prevents packaging adapters from diverging on guardrails or
+        routing—lab 18 packaging lesson applied to case 06.
+
+    Trade-offs
+        Missing approver becomes auto-approve (convenient for smoke; callers
+        that need HITL must pass an explicit function).
+
+    Edges
+        Failed ``check_input`` → refused payload with ``input_guardrail``.
+        ``forced_route`` skips the heuristic router (used by scripted eval).
+    """
     ok, reason = check_input(message, max_chars=config.max_chars)
     if not ok:
         return {

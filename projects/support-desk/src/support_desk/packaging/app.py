@@ -1,4 +1,23 @@
-"""CLI and HTTP adapters over handle_message (lab 18)."""
+"""CLI and HTTP adapters over handle_message (lab 18).
+
+Purpose
+    Provide process entrypoints: build ToolContext, argparse ``ask`` / ``serve``
+    / ``smoke``, and a small Threading HTTP API with ``/health`` and ``/ask``.
+
+Why
+    Packaging adapters must stay thin. All customer handling delegates to
+    ``agent.loop.handle_message`` so CLI and HTTP cannot diverge on guardrails,
+    routing, or HITL wiring.
+
+Trade-offs
+    Shared in-memory/temp DB per process for serve—fine for demos, not multi-
+    tenant isolation. HTTP ``approve`` defaults True from JSON. Interactive
+    CLI approver blocks on stdin.
+
+Edges
+    ``ask``/``serve`` require API key; ``smoke`` does not. Smoke probes health
+    only—no model call. Input guardrail on ask exits 2.
+"""
 
 from __future__ import annotations
 
@@ -22,6 +41,21 @@ from support_desk.tools_gate.tools import ToolContext
 
 
 def build_context(config: Config, *, db_path: str | Path | None = None) -> ToolContext:
+    """Create a seeded DB connection and policy store for one process.
+
+    Purpose
+        Return a ``ToolContext`` ready for ``handle_message``.
+
+    Why
+        CLI, HTTP, and smoke share the same wiring so demos stay consistent.
+
+    Trade-offs
+        ``init_db`` wipes the target path—pass a temp path for disposable runs.
+        Missing ``db_path`` and empty config path → anonymous temp file.
+
+    Edges
+        Explicit ``db_path`` overrides ``config.db_path``.
+    """
     path = db_path or config.db_path
     if not path:
         tmp = tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False)
@@ -32,6 +66,21 @@ def build_context(config: Config, *, db_path: str | Path | None = None) -> ToolC
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Construct the support-desk CLI argument parser.
+
+    Purpose
+        Define ``ask``, ``serve``, and ``smoke`` subcommands and flags.
+
+    Why
+        Keeps ``main`` thin and makes parser testable in isolation.
+
+    Trade-offs
+        ``command`` is required—no default subcommand.
+
+    Edges
+        Ask supports ``--approve`` / ``--deny`` / ``--report``. Smoke accepts
+        ``--port`` (0 = ephemeral).
+    """
     parser = argparse.ArgumentParser(prog="support-desk")
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -62,6 +111,22 @@ def _approver_from_args(args: argparse.Namespace) -> Callable[[str], bool]:
 
 
 def cmd_ask(args: argparse.Namespace, config: Config) -> int:
+    """Handle one CLI customer message and print JSON (optional report).
+
+    Purpose
+        Build context, call ``handle_message``, print the result, optionally
+        print a run report.
+
+    Why
+        Primary interactive demo path for the packaging layer.
+
+    Trade-offs
+        Trace object is stripped from JSON (not easily serializable). Exit 2
+        on input guardrail so scripts can distinguish refusal.
+
+    Edges
+        Approver comes from ``--approve`` / ``--deny`` / interactive stdin.
+    """
     ctx = build_context(config)
     result = handle_message(
         args.message,
@@ -76,11 +141,72 @@ def cmd_ask(args: argparse.Namespace, config: Config) -> int:
 
 
 def make_handler(config: Config, ctx: ToolContext) -> type[BaseHTTPRequestHandler]:
+    """Build an HTTP handler class closed over config and shared context.
+
+    Purpose
+        Serve ``GET /health`` and ``POST /ask`` without a heavy framework.
+
+    Why
+        Lab-scale packaging: stdlib HTTP is enough to prove the adapter shape.
+
+    Trade-offs
+        Access log is silenced. Shared ``ctx`` across threads—SQLite + call log
+        are not hardened for heavy concurrency.
+
+    Edges
+        Unknown paths → 404. Invalid JSON on ask → 400. Approve defaults from
+        JSON body ``approve`` (default True).
+    """
+
     class Handler(BaseHTTPRequestHandler):
+        """Minimal health and ask endpoints for support-desk.
+
+        Purpose
+            Implement GET/POST routing for the demo server.
+
+        Why
+            Nested class captures ``config`` and ``ctx`` without globals.
+
+        Trade-offs
+            No auth, CORS, or request size caps beyond Content-Length trust.
+
+        Edges
+            ``log_message`` is a no-op to keep smoke output clean.
+        """
+
         def log_message(self, format: str, *args: Any) -> None:
+            """Suppress default BaseHTTPRequestHandler access logs.
+
+            Purpose
+                Keep smoke and demo stdout free of per-request noise.
+
+            Why
+                Stdlib logging would drown the health/ask payloads operators care
+                about in this lab.
+
+            Trade-offs
+                Hides useful production access logs; re-enable for real deploys.
+
+            Edges
+                Format and args are ignored entirely.
+            """
             return
 
         def do_GET(self) -> None:
+            """Serve health JSON or 404.
+
+            Purpose
+                Answer liveness probes for smoke and orchestration.
+
+            Why
+                Smoke must not need a model call.
+
+            Trade-offs
+                Only exact ``/health`` (trailing slash stripped).
+
+            Edges
+                Other GET paths → 404.
+            """
             if self.path.rstrip("/") == "/health":
                 body = json.dumps({"ok": True, "service": "support-desk"}).encode()
                 self.send_response(200)
@@ -92,6 +218,20 @@ def make_handler(config: Config, ctx: ToolContext) -> type[BaseHTTPRequestHandle
             self.send_error(404)
 
         def do_POST(self) -> None:
+            """Handle ``/ask`` JSON bodies via ``handle_message``.
+
+            Purpose
+                Accept ``{message, approve?}`` and return the agent result JSON.
+
+            Why
+                HTTP adapter should mirror CLI ask without duplicating loop code.
+
+            Trade-offs
+                Trace omitted from response. Approve defaults True when omitted.
+
+            Edges
+                Non-``/ask`` → 404. Bad JSON → 400.
+            """
             if self.path.rstrip("/") != "/ask":
                 self.send_error(404)
                 return
@@ -123,6 +263,21 @@ def make_handler(config: Config, ctx: ToolContext) -> type[BaseHTTPRequestHandle
 
 
 def cmd_serve(config: Config) -> int:
+    """Run the HTTP server until KeyboardInterrupt.
+
+    Purpose
+        Bind ``127.0.0.1:config.port`` and serve forever.
+
+    Why
+        Long-running packaging demo for /health and /ask.
+
+    Trade-offs
+        Localhost only. Blocking ``serve_forever`` in the main thread.
+
+    Edges
+        Ctrl-C prints shutting down and closes the server. Always returns 0
+        after clean shutdown.
+    """
     ctx = build_context(config)
     server = ThreadingHTTPServer(("127.0.0.1", config.port), make_handler(config, ctx))
     print(f"support-desk listening on http://127.0.0.1:{config.port}")
@@ -136,7 +291,21 @@ def cmd_serve(config: Config) -> int:
 
 
 def smoke_test(config: Config, *, port: int | None = None) -> int:
-    """Prove the process starts and /health answers without a model call."""
+    """Prove the process starts and /health answers without a model call.
+
+    Purpose
+        Boot a short-lived server, GET health, shut down, return exit status.
+
+    Why
+        Packaging CI signal that imports, config (without key), and HTTP wiring
+        work before spending on live asks.
+
+    Trade-offs
+        Does not exercise ``/ask``. Uses a daemon thread for serve_forever.
+
+    Edges
+        ``port`` None/0 → ephemeral bind. Failure prints to stderr and returns 1.
+    """
     bind_port = port if port is not None else 0
     ctx = build_context(config)
     server = ThreadingHTTPServer(("127.0.0.1", bind_port), make_handler(config, ctx))
@@ -160,6 +329,24 @@ def smoke_test(config: Config, *, port: int | None = None) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI entry: parse args, load config, dispatch ask/serve/smoke.
+
+    Purpose
+        Return a process exit code for ``python -m support_desk`` and console
+        scripts.
+
+    Why
+        Single packaging main keeps key requirements and command routing in one
+        place.
+
+    Trade-offs
+        Unknown command after parse falls through to return 1 (argparse usually
+        prevents this).
+
+    Edges
+        ``ConfigError`` → stderr + exit 2. Ask/serve require API key; smoke
+        does not.
+    """
     parser = build_parser()
     args = parser.parse_args(argv)
     try:

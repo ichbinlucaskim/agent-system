@@ -1,4 +1,24 @@
-"""Offline and live evaluation against action expectations (lab 15)."""
+"""Offline and live evaluation against action expectations (lab 15).
+
+Purpose
+    Load JSON cases, run deterministic offline plans (and optional scripted
+    model loops), and score must-call / must-not-succeed / DB outcome checks.
+
+Why
+    This is the evaluation layer: the failure mode that matters for a support
+    desk is wrong side effects. Offline suites stay free of API spend while
+    still asserting policy-gate and tool-precondition behavior.
+
+Trade-offs
+    Account plans are hardcoded by case id (``_plan_for_case``)—adding a case
+    requires a plan entry. FAQ offline scoring checks route + answer substrings
+    only. ``run_case_with_scripted_model`` exercises the real loop without a
+    live LLM.
+
+Edges
+    Each case gets a fresh temp DB + policy store. Approver kinds ``approve`` /
+    ``deny`` map to boolean lambdas.
+"""
 
 from __future__ import annotations
 
@@ -18,6 +38,20 @@ from support_desk.tools_gate.tools import ToolContext
 
 
 def load_cases(path: Path | None = None) -> list[dict[str, Any]]:
+    """Load eval cases from JSON.
+
+    Purpose
+        Parse the cases file into a list of case dicts.
+
+    Why
+        Keeps fixture location centralized via ``EVAL_CASES``.
+
+    Trade-offs
+        No schema validation beyond ``json.loads``.
+
+    Edges
+        ``path`` defaults to ``paths.EVAL_CASES``.
+    """
     return json.loads((path or EVAL_CASES).read_text(encoding="utf-8"))
 
 
@@ -36,8 +70,21 @@ def _approver(kind: str) -> Callable[[str], bool]:
 def run_case_offline(case: dict[str, Any]) -> dict[str, Any]:
     """Deterministic path: execute the scripted tool plan for account cases.
 
-    FAQ cases check routing and policy search only. This keeps the suite free
-    of API spend while still scoring the failure mode that matters: actions.
+    Purpose
+        Score one case without calling a live model.
+
+    Why
+        FAQ cases check routing and policy search only. Account cases drive
+        ``guarded_execute`` from a heuristic plan. This keeps the suite free
+        of API spend while still scoring the failure mode that matters: actions.
+
+    Trade-offs
+        Plan quality is author-controlled; it does not detect model mistakes,
+        only that gates and DB behave for that plan.
+
+    Edges
+        FAQ: fails if route ≠ faq or expected needles missing. Account: empty
+        plan still runs expect checks (usually fails must_call).
     """
     ctx = _fresh_ctx()
     expect = case["expect"]
@@ -166,6 +213,20 @@ def _check_expect(
 
 
 def run_suite_offline(cases: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """Run every case offline and summarize pass rate.
+
+    Purpose
+        Aggregate ``run_case_offline`` results into totals and a pass rate.
+
+    Why
+        Single entry for CI / CLI suite runs.
+
+    Trade-offs
+        Stops at per-case dicts—no junit export here.
+
+    Edges
+        Empty suite → ``pass_rate`` 0.0. Loads default cases when ``None``.
+    """
     cases = cases or load_cases()
     results = [run_case_offline(case) for case in cases]
     passed = sum(1 for r in results if r["passed"])
@@ -178,7 +239,22 @@ def run_suite_offline(cases: list[dict[str, Any]] | None = None) -> dict[str, An
 
 
 def make_scripted_complete_with_tools(plan: list[dict[str, Any]]) -> Callable[..., Any]:
-    """Return a fake model that emits the plan as tool_use then a final text."""
+    """Return a fake model that emits the plan as tool_use then a final text.
+
+    Purpose
+        Drive ``run_account`` / ``handle_message`` without network I/O.
+
+    Why
+        Exercises the real loop, gate, and message assembly while staying
+        offline—stronger than plan-only offline for orchestration bugs.
+
+    Trade-offs
+        Emits one tool per turn then ``Done.``; does not simulate multi-tool
+        parallel blocks or model refusal text.
+
+    Edges
+        Closure mutates ``state["i"]``; build a new fake per case.
+    """
 
     state = {"i": 0}
 
@@ -213,7 +289,21 @@ def make_scripted_complete_with_tools(plan: list[dict[str, Any]]) -> Callable[..
 
 
 def run_case_with_scripted_model(case: dict[str, Any]) -> dict[str, Any]:
-    """Exercise the real agent loop with a scripted model (still offline)."""
+    """Exercise the real agent loop with a scripted model (still offline).
+
+    Purpose
+        Run ``handle_message`` with a fake ``complete_with_tools`` for account
+        cases; FAQ falls back to ``run_case_offline``.
+
+    Why
+        Catches loop/budget/audit wiring bugs that plan-only offline misses.
+
+    Trade-offs
+        Forces ``account`` route; does not test the live router on these cases.
+
+    Edges
+        Expect checks use audits from the real gate path.
+    """
     if case.get("route") == "faq":
         return run_case_offline(case)
 

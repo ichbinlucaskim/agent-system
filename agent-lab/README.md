@@ -16,6 +16,11 @@ want to understand the patterns underneath agent frameworks well enough to
 choose between them, debug them, and decide when not to use one at all. It also
 maps onto the objectives of two certifications; see `docs/cert-mapping.md`.
 
+When you finish the labs and wonder where AWS or common libraries attach, read
+`docs/from-lab-to-cloud.md`. The short version: labs decide what must stay true;
+libraries speed up the build; cloud is where the same core runs, stores state,
+and gets observed.
+
 ## The four tracks
 
 - **Track 1, patterns.** The composable workflow patterns: the augmented LLM,
@@ -112,7 +117,8 @@ lab/
 ├── common/     shared helpers: client, tracing, cost, vectorstore
 ├── labs/       the nineteen labs, grouped by track
 ├── capstone/   the end-to-end project brief
-└── docs/       glossary, certification mapping, reading list
+└── docs/       glossary, certification mapping, reading list,
+                lab-to-cloud map
 ```
 
 `CLAUDE.md` holds the conventions for this repository, including the rule that

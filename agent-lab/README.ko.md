@@ -16,6 +16,11 @@ framework 밑에 깔린 패턴을 충분히 이해해서 그중 무엇을 고를
 언제 아예 쓰지 않을지 판단하고 싶은 엔지니어를 위한 과정입니다. 두 가지 인증
 시험의 목표와도 대응되며, 자세한 내용은 `docs/cert-mapping.md`에 있습니다.
 
+lab을 마친 뒤 AWS나 흔한 library가 어디에 붙는지 궁금하면
+`docs/from-lab-to-cloud.ko.md`를 보세요. 짧은 버전: lab은 무엇이 지켜져야
+하는지를 정하고, library는 구현을 빠르게 하며, cloud는 같은 core가 돌고
+상태를 두고 관측되는 실행 환경입니다.
+
 ## 네 개의 track
 
 - **Track 1, 패턴.** 조합 가능한 workflow 패턴들입니다. augmented LLM, prompt
@@ -109,7 +114,8 @@ lab/
 ├── common/     공용 helper: client, tracing, cost, vectorstore
 ├── labs/       track별로 묶인 열아홉 개의 lab
 ├── capstone/   end-to-end 프로젝트 과제
-└── docs/       glossary, 인증 시험 매핑, 읽을거리 목록
+└── docs/       glossary, 인증 시험 매핑, 읽을거리 목록,
+                lab-to-cloud 대응표
 ```
 
 `CLAUDE.md`에는 이 저장소의 규약이 담겨 있으며, `README.md`와 `README.ko.md`를

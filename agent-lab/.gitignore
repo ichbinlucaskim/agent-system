@@ -21,6 +21,7 @@ htmlcov/
 # only the generated artifacts below are ignored.
 *.sqlite3
 *.db
+labs/track-2-tools-context/11-context-memory/data/*.txt
 
 # OS
 .DS_Store

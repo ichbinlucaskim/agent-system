@@ -83,25 +83,62 @@ def render_diff(before: str, after: str, path: str) -> str:
     return "".join(lines)
 
 
+def _consequence_lines(name: str, arguments: dict[str, Any]) -> list[str]:
+    """Lines that show what will actually happen if the action runs."""
+    if name == "write_file":
+        # The approver needs the diff, not the tool name. A confirmation
+        # without it trains people to click approve.
+        path = str(arguments.get("path", ""))
+        before = FILES.get(path, "")
+        after = str(arguments.get("content", ""))
+        return [render_diff(before, after, path)]
+    if name == "send_email":
+        # An email cannot be unsent: show recipient and subject up front,
+        # not buried inside a raw arguments dump.
+        return [
+            f"to: {arguments.get('to', '')}",
+            f"subject: {arguments.get('subject', '')}",
+            f"body: {arguments.get('body', '')}",
+        ]
+    return []
+
+
 def approve(action: dict[str, Any], approver: Callable[[str], bool]) -> bool:
     """Present an action for approval and return the decision."""
     name = action["name"]
     arguments = dict(action.get("arguments", {}))
-    summary = [f"approve {name}? arguments: {arguments}"]
-    if name == "write_file":
-        # The approver needs the consequence, not the tool name. A
-        # confirmation without a diff trains people to click approve.
-        path = str(arguments.get("path", ""))
-        before = FILES.get(path, "")
-        after = str(arguments.get("content", ""))
-        summary.append(render_diff(before, after, path))
+    summary = [f"approve {name}?"]
+    summary.extend(_consequence_lines(name, arguments))
     # The decision comes through a callback so tests can script both
     # answers; an interactive main just passes input-based yes or no.
     return bool(approver("\n".join(summary)))
 
 
+def _audit(
+    *,
+    executed: bool,
+    classification: str,
+    reason: str,
+    result: Any,
+    decided_by: str,
+) -> dict[str, Any]:
+    """Build the audit record every path must return."""
+    return {
+        "executed": executed,
+        "classification": classification,
+        "reason": reason,
+        "result": result,
+        # When something goes wrong the question is what was approved and
+        # by whom; "policy" means no person was in the loop.
+        "decided_by": decided_by,
+    }
+
+
 def guarded_execute(
-    action: dict[str, Any], approver: Callable[[str], bool]
+    action: dict[str, Any],
+    approver: Callable[[str], bool],
+    *,
+    actor: str = "approver",
 ) -> dict[str, Any]:
     """Enforce the policy around one action and return an audit record."""
     name = action["name"]
@@ -111,42 +148,50 @@ def guarded_execute(
     # Forbidden is refused before anyone is prompted: this path must not
     # depend on a human being awake, or on the executor existing.
     if classification == "forbidden":
-        return {
-            "executed": False,
-            "classification": classification,
-            "reason": f"{name} is forbidden by policy and was not attempted.",
-            "result": None,
-        }
+        return _audit(
+            executed=False,
+            classification=classification,
+            reason=f"{name} is forbidden by policy and was not attempted.",
+            result=None,
+            decided_by="policy",
+        )
 
-    if classification == "confirm" and not approve(action, approver):
-        return {
-            "executed": False,
-            "classification": classification,
-            "reason": f"{name} was denied by the approver.",
-            "result": None,
-        }
+    if classification == "confirm":
+        if not approve(action, approver):
+            return _audit(
+                executed=False,
+                classification=classification,
+                reason=f"{name} was denied by the approver.",
+                result=None,
+                decided_by=actor,
+            )
 
     executor = EXECUTORS.get(name)
     if executor is None:
-        return {
-            "executed": False,
-            "classification": classification,
-            "reason": f"no executor is registered for {name}.",
-            "result": None,
-        }
+        return _audit(
+            executed=False,
+            classification=classification,
+            reason=f"no executor is registered for {name}.",
+            result=None,
+            decided_by="policy",
+        )
 
     result = executor(arguments)
-    reason = (
-        "auto-approved by policy"
-        if classification == "auto"
-        else "approved by the approver"
+    if classification == "auto":
+        return _audit(
+            executed=True,
+            classification=classification,
+            reason="auto-approved by policy",
+            result=result,
+            decided_by="policy",
+        )
+    return _audit(
+        executed=True,
+        classification=classification,
+        reason="approved by the approver",
+        result=result,
+        decided_by=actor,
     )
-    return {
-        "executed": True,
-        "classification": classification,
-        "reason": reason,
-        "result": result,
-    }
 
 
 def as_tool_result(record: dict[str, Any], tool_use_id: str) -> dict[str, Any]:
@@ -192,7 +237,11 @@ def main() -> int:
         (
             {
                 "name": "send_email",
-                "arguments": {"to": "team@example.com", "subject": "Weekly report"},
+                "arguments": {
+                    "to": "team@example.com",
+                    "subject": "Weekly report",
+                    "body": "Status update.",
+                },
             },
             deny_all,
         ),
@@ -200,10 +249,11 @@ def main() -> int:
     ]
 
     for index, (action, approver) in enumerate(actions):
-        record = guarded_execute(action, approver)
+        record = guarded_execute(action, approver, actor="demo-approver")
         print(
             f"{action['name']:<16} class={record['classification']:<10} "
-            f"executed={record['executed']} reason={record['reason']}"
+            f"executed={record['executed']} decided_by={record['decided_by']} "
+            f"reason={record['reason']}"
         )
         print(f"as tool result: {as_tool_result(record, f'toolu_{index}')}\n")
     return 0

@@ -24,16 +24,16 @@ A confirmation prompt that shows only the tool name teaches people to click appr
 
 Auto-approve is a policy decision with a cost. Widening it makes the agent faster and moves risk onto whatever runs after it. Narrowing it makes the agent safer and, past some point, so slow that people route around it. Write the policy down, keep it in one place, and change it deliberately.
 
-Log every decision, including the automatic ones. When something goes wrong, the question is always what was approved, by whom, and what it actually did, and that question can only be answered from a record written at the time.
+Log every decision, including the automatic ones. When something goes wrong, the question is always what was approved, by whom, and what it actually did, and that question can only be answered from a record written at the time. The audit field `decided_by` is `policy` when no person was asked, or the named actor when a confirmation ran.
 
 ## Steps
 
 1. Write `POLICY`: a single mapping from tool name to `auto`, `confirm`, or `forbidden`, with a comment explaining the reversibility reasoning behind each entry.
 2. Implement `classify_action`: return the policy class for an action, defaulting unknown tools to `confirm` rather than `auto`.
 3. Implement `render_diff`: use `difflib` to show exactly what a write changes, including the path and the added and removed lines.
-4. Implement `approve`: present the action, and for a write present the diff, then take a yes or no from an approver callback so it can be scripted in tests.
-5. Implement `guarded_execute`: refuse forbidden actions before any prompt, run auto actions directly, and require approval for the rest. Return an audit record for every path.
-6. Add a denial reason and pass it back to the model as a tool result, so a refused action becomes information rather than a dead end.
+4. Implement `approve`: present the action; for a write present the diff; for an email present recipient, subject, and body; then take a yes or no from an approver callback so it can be scripted in tests.
+5. Implement `guarded_execute`: refuse forbidden actions before any prompt, run auto actions directly, and require approval for the rest. Return an audit record on every path with `executed`, `classification`, `reason`, `result`, and `decided_by` (`policy` or the named actor).
+6. Implement `as_tool_result`: turn the audit record into a Messages API `tool_result` block, with the denial reason when refused, so a refused action becomes information for the model rather than a dead end.
 
 ## Verification
 
@@ -41,7 +41,7 @@ Log every decision, including the automatic ones. When something goes wrong, the
 pytest labs/track-3-autonomy/14-human-in-the-loop/tests -v
 ```
 
-The policy layer is pure logic and is tested offline. Passing means a forbidden action never reaches the executor and never prompts anyone, an auto action runs without an approver, a confirm action calls the approver and is not executed when denied, the diff shows both added and removed lines, and every path returns an audit record.
+The policy layer is pure logic and is tested offline. Passing means a forbidden action never reaches the executor and never prompts anyone, an auto action runs without an approver, a confirm action calls the approver and is not executed when denied, a write confirmation shows the unified diff to the approver, an email confirmation shows recipient and subject, the diff shows both added and removed lines, every path returns an audit record naming `decided_by`, and `as_tool_result` carries success or refusal (with reason) back as a tool result.
 
 ## Going further
 

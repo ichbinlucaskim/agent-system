@@ -22,7 +22,7 @@ Output validation is where you decide what your system is allowed to emit. If a 
 
 The dangerous input is usually not the user's message. It is the tool result: a web page, a database row, a file, an email. Any of those can contain text addressed to the model, and if your prompt does not distinguish data from instructions, the model has no way to either.
 
-The mitigation is structural. Wrap untrusted content in a clearly labelled block that names its source and states that its contents are data and never instructions, then restrict what the agent can do while holding it. Detection heuristics that scan for phrases like ignore previous instructions are worth adding, but they are a tripwire and not a wall.
+The mitigation is structural. Wrap untrusted content in a clearly labelled block that names its source and states that its contents are data and never instructions, then restrict what the agent can do while holding it — in this lab, the parent may have `write_note`, but the reading context exposes none. Detection heuristics that scan for phrases like ignore previous instructions are worth adding, but they are a tripwire and not a wall: they alert; they must not be the only control.
 
 Scope refusal needs both halves. Tell the model what it does not handle, and also check in code, because a refusal you can only get by asking is a refusal an injection can take away.
 
@@ -32,8 +32,8 @@ Scope refusal needs both halves. Tell the model what it does not handle, and als
 2. Implement `validate_output`: check a parsed payload against a small schema and return every violation, not just the first one.
 3. Implement `wrap_untrusted`: place tool results inside a labelled block naming the source and stating that its content is data and never instructions.
 4. Implement `detect_injection`: flag known instruction-like patterns in tool results, and document in the docstring that this is a tripwire and not a defence.
-5. Implement `guarded_answer`: run the input filter, make the call with wrapped tool results, validate the output, and return the answer together with every guardrail decision.
-6. Feed the agent a document containing an embedded instruction and confirm that the tool restriction, not the prompt, is what stops it.
+5. Implement `guarded_answer`: run the input filter, expose only `tools_while_reading_untrusted()` (no writes) while documents are in context, wrap tool results, record tripwire findings without aborting, call the model (injectable for tests), validate the output, and return the answer together with every guardrail decision.
+6. Put an embedded instruction (and a write request) in a document. Confirm the tripwire flags it, the call still proceeds with wrapped data, and `write_note` is absent from the reading tool set — that restriction, not the prompt, is the wall.
 
 ## Verification
 
@@ -41,7 +41,7 @@ Scope refusal needs both halves. Tell the model what it does not handle, and als
 pytest labs/track-4-production/17-guardrails/tests -v
 ```
 
-Every guardrail here is deterministic and tested offline, which is the point: a guardrail you cannot test is a hope. Passing means oversized and out-of-scope input is rejected with a reason, schema validation reports all violations at once, untrusted content is labelled with its source, known injection phrasings are flagged, and the result carries the guardrail decisions alongside the answer.
+Every guardrail here is deterministic and tested offline, which is the point: a guardrail you cannot test is a hope. Passing means empty, oversized, and out-of-scope input are rejected with a reason, schema validation reports all violations at once (including bool-as-number), untrusted content is labelled with its source, known injection phrasings are flagged as a tripwire that does not abort the call, writes are absent while reading untrusted content, invalid model output is withheld, and the result carries the guardrail decisions alongside the answer.
 
 ## Going further
 

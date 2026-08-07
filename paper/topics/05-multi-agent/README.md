@@ -6,6 +6,43 @@
 
 Several agents, or one agent playing several roles. This topic sits late in the default reading path on purpose: the coordination questions only become legible once the single-agent loop and its failure modes are familiar.
 
+## What to carry instead of the papers
+
+Both papers here are filed as reference tier, and that is
+deliberate. The reusable parts of each are not the multiplicity: one
+contributes a memory design that works in a single agent, and the other
+contributes the observation that a model, a tool, and a person can be
+the same kind of participant behind one interface. Read them for those,
+and treat the population itself as the thing to justify.
+
+| Shape | When it pays | What it costs |
+| --- | --- | --- |
+| One agent | The work shares a thread of reasoning | Nothing beyond the task |
+| Subagent fan-out | Independent work, or a capability worth withholding | A fresh context per child, plus reading each report |
+| Agents in conversation | A decision that genuinely needs another vantage point | A round trip per exchange, with no natural stopping point |
+
+So the questions are about when not to, and they are worth asking before
+adding the second agent rather than after.
+
+1. **What does the second agent know that the first does not?** A useful
+   split gives each side a different tool set, a different context, or
+   genuinely different instructions. If the answer is nothing, the round
+   trip buys a conversation with itself.
+2. **Does the split restrict a capability?** This is the strongest
+   reason and the most overlooked. A child given only read tools cannot
+   be turned into a writer by an injection in what it reads.
+   Restriction by construction beats instruction.
+3. **Does the work repay the handoff?** Every child rebuilds its context
+   from nothing and returns a report the parent must read. Work the
+   parent could finish in a few tool calls does not repay that, and the
+   only honest way to know is to run it both ways and compare tokens,
+   wall-clock, and quality.
+
+One caution that follows from the same place: agreement between agents
+is not evidence when the agents are one model in different prompts.
+Their answers are correlated by construction, which is what separates
+this from the voting in `01-reasoning`.
+
 ## Prerequisite topics
 
 - [`02-acting-and-tools`](../02-acting-and-tools/README.md) Acting and tools

@@ -332,6 +332,72 @@ reading it from the beginning.""",
 그러면 새 논문을 놓는 일은 처음부터 읽는 일이 아니라 그것이 들어갈 칸을
 찾는 일이 됩니다.""",
     },
+    "05-multi-agent": {
+        "en": """Both papers here are filed as reference tier, and that is
+deliberate. The reusable parts of each are not the multiplicity: one
+contributes a memory design that works in a single agent, and the other
+contributes the observation that a model, a tool, and a person can be
+the same kind of participant behind one interface. Read them for those,
+and treat the population itself as the thing to justify.
+
+| Shape | When it pays | What it costs |
+| --- | --- | --- |
+| One agent | The work shares a thread of reasoning | Nothing beyond the task |
+| Subagent fan-out | Independent work, or a capability worth withholding | A fresh context per child, plus reading each report |
+| Agents in conversation | A decision that genuinely needs another vantage point | A round trip per exchange, with no natural stopping point |
+
+So the questions are about when not to, and they are worth asking before
+adding the second agent rather than after.
+
+1. **What does the second agent know that the first does not?** A useful
+   split gives each side a different tool set, a different context, or
+   genuinely different instructions. If the answer is nothing, the round
+   trip buys a conversation with itself.
+2. **Does the split restrict a capability?** This is the strongest
+   reason and the most overlooked. A child given only read tools cannot
+   be turned into a writer by an injection in what it reads.
+   Restriction by construction beats instruction.
+3. **Does the work repay the handoff?** Every child rebuilds its context
+   from nothing and returns a report the parent must read. Work the
+   parent could finish in a few tool calls does not repay that, and the
+   only honest way to know is to run it both ways and compare tokens,
+   wall-clock, and quality.
+
+One caution that follows from the same place: agreement between agents
+is not evidence when the agents are one model in different prompts.
+Their answers are correlated by construction, which is what separates
+this from the voting in `01-reasoning`.""",
+        "ko": """여기 두 논문은 reference tier로 분류되어 있고, 그것은 의도된
+것입니다. 각각에서 재사용되는 부분은 다수성이 아닙니다. 하나는 단일 agent에서
+작동하는 memory 설계를 내놓고, 다른 하나는 모델과 tool과 사람이 하나의
+인터페이스 뒤에서 같은 종류의 참여자일 수 있다는 관찰을 내놓습니다. 그것들을
+위해 읽고, 인구 자체는 정당화해야 할 대상으로 다루세요.
+
+| 형태 | 언제 값을 하는가 | 무엇을 치르는가 |
+| --- | --- | --- |
+| agent 하나 | 작업이 하나의 추론 줄기를 공유할 때 | task 외에 없음 |
+| subagent fan-out | 독립적인 작업, 또는 쥐여 주지 않을 값어치가 있는 능력 | 자식마다 새 context, 그리고 보고서 읽기 |
+| 대화하는 agent들 | 다른 시점이 진짜로 필요한 결정 | 주고받음마다 왕복, 자연스러운 종료 없음 |
+
+그래서 질문들은 언제 하지 말아야 하는가에 관한 것이고, 두 번째 agent를 더한
+뒤가 아니라 더하기 전에 물을 값어치가 있습니다.
+
+1. **두 번째 agent가 첫 번째가 모르는 무엇을 아는가.** 쓸모 있는 분할은 각
+   쪽에 다른 tool 집합이나 다른 context나 진짜로 다른 지시를 줍니다. 답이
+   없다면 그 왕복은 자기 자신과의 대화를 사는 것입니다.
+2. **그 분할이 능력을 제한하는가.** 가장 강한 이유이면서 가장 자주 지나치는
+   것입니다. 읽기 tool만 받은 자식은 자기가 읽는 것 안의 injection으로
+   쓰기 주체가 될 수 없습니다. 구성으로 제한하는 것이 지시로 제한하는 것을
+   이깁니다.
+3. **그 작업이 인계 비용을 회수하는가.** 자식마다 context를 맨바닥에서 다시
+   세우고, 부모가 읽어야 하는 보고서를 돌려줍니다. 부모가 tool 호출 몇 번으로
+   끝낼 수 있는 일은 그것을 회수하지 못하며, 아는 정직한 방법은 양쪽으로
+   돌려서 token과 벽시계와 품질을 비교하는 것뿐입니다.
+
+같은 자리에서 따라 나오는 주의 하나. agent들이 다른 prompt를 입은 한 모델일
+때, 그것들 사이의 동의는 증거가 아닙니다. 답이 구성상 상관되어 있고, 그것이
+`01-reasoning`의 투표와 이것을 가르는 지점입니다.""",
+    },
 }
 
 TIER_NOTE_EN = {

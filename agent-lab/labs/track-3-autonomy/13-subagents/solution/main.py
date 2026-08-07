@@ -2,7 +2,7 @@
 
 A subagent is a child agent with a fresh context window, its own system
 prompt, and a tool set narrower than its parent's. The parent hands it a
-task and reads back a report; everything the child read along the way
+subtask and reads back a report; everything the child read along the way
 stays out of the parent's context. The lab ends in a measurement of what
 that isolation costs and buys.
 """
@@ -17,7 +17,9 @@ from typing import Any, Callable
 from common.client import complete, complete_with_tools, text_of, tool_uses
 from common.cost import TokenUsage, usage_of
 
-# One shared budget shape for both approaches keeps the comparison honest.
+# One shared step-budget shape for both approaches keeps the comparison honest.
+# Cost and wall-clock ceilings from lab 12 can wrap the parent later; this lab
+# focuses on isolation and the measurement.
 DEFAULT_MAX_STEPS = 6
 
 SINGLE_AGENT_SYSTEM = (
@@ -68,6 +70,27 @@ ALL_TOOLS: list[dict[str, Any]] = [
             "required": ["filename"],
         },
     },
+    {
+        "name": "write_note",
+        "description": (
+            "Create or overwrite a project note. Parent-only in the demo: "
+            "read-only subagents must not receive this tool."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "filename": {
+                    "type": "string",
+                    "description": "The note filename to write.",
+                },
+                "body": {
+                    "type": "string",
+                    "description": "The full text to store in the note.",
+                },
+            },
+            "required": ["filename", "body"],
+        },
+    },
 ]
 
 
@@ -81,12 +104,19 @@ def execute_tool(name: str, arguments: dict[str, Any]) -> tuple[str, bool]:
             known = ", ".join(sorted(NOTES))
             return (f"Error: no note {filename!r}. Notes: {known}.", True)
         return (NOTES[filename], False)
+    if name == "write_note":
+        filename = str(arguments.get("filename", "")).strip()
+        body = str(arguments.get("body", ""))
+        if not filename:
+            return ("Error: filename is required.", True)
+        NOTES[filename] = body
+        return (f"Wrote {filename} ({len(body)} chars).", False)
     return (f"Error: unknown tool {name!r}.", True)
 
 
 @dataclass(frozen=True)
 class SubagentSpec:
-    """The definition of one child agent: prompt, tools, and budget."""
+    """The definition of one child agent: prompt, tools, subtask, and budget."""
 
     name: str
     system: str
@@ -94,6 +124,9 @@ class SubagentSpec:
     # against the parent's real set, so a typo fails loudly instead of
     # quietly granting nothing.
     allowed_tools: list[str]
+    # Each child gets its own subtask. Passing the parent's full task to
+    # every child is prompt-splitting, not fan-out over independent work.
+    task: str
     max_steps: int = DEFAULT_MAX_STEPS
 
 
@@ -110,7 +143,8 @@ def restrict_tools(
             f"spec allows tools the parent does not have: {missing}. "
             f"Parent tools: {sorted(known)}."
         )
-    return [tool for tool in all_tools if tool["name"] in allowed]
+    allowed_set = set(allowed)
+    return [tool for tool in all_tools if tool["name"] in allowed_set]
 
 
 def _live_model_call(
@@ -129,7 +163,12 @@ def _agent_run(
     model_call: Callable[..., Any] | None,
     executor: Callable[[str, dict[str, Any]], tuple[str, bool]] | None,
 ) -> dict[str, Any]:
-    """The shared loop: one agent, one fresh message list, a step budget."""
+    """A lab-12-shaped loop: fresh messages, step budget, named stop_reason.
+
+    Cost and wall-clock ceilings from lab 12 are omitted here so the
+    comparison stays about isolation; the control flow (feed tool results
+    back, stop with a reason) is the same shape.
+    """
     call = model_call or _live_model_call
     run_tool = executor or execute_tool
     allowed = {tool["name"] for tool in tools}
@@ -137,6 +176,7 @@ def _agent_run(
     usage = TokenUsage()
     steps = 0
     report = ""
+    stop_reason = "max_steps"
 
     for _ in range(max_steps):
         response = call(messages, tools, system)
@@ -145,6 +185,7 @@ def _agent_run(
         messages.append({"role": "assistant", "content": response.content})
         if response.stop_reason != "tool_use":
             report = text_of(response)
+            stop_reason = "completed"
             break
         results: list[dict[str, Any]] = []
         for block in tool_uses(response):
@@ -175,12 +216,17 @@ def _agent_run(
             )
         messages.append({"role": "user", "content": results})
 
-    return {"report": report, "usage": usage, "steps": steps, "messages": messages}
+    return {
+        "report": report,
+        "usage": usage,
+        "steps": steps,
+        "messages": messages,
+        "stop_reason": stop_reason,
+    }
 
 
 def run_subagent(
     spec: Any,
-    task: str,
     all_tools: list[dict[str, Any]],
     *,
     model_call: Callable[..., Any] | None = None,
@@ -188,9 +234,11 @@ def run_subagent(
 ) -> dict[str, Any]:
     """Run one child agent with its own context and restricted tools."""
     tools = restrict_tools(all_tools, spec.allowed_tools)
-    # The message list starts empty apart from the task itself. Passing any
-    # parent history here would defeat the entire point of the pattern.
-    result = _agent_run(task, spec.system, tools, spec.max_steps, model_call, executor)
+    # The message list starts empty apart from the child's own subtask.
+    # Passing any parent history here would defeat the entire point.
+    result = _agent_run(
+        spec.task, spec.system, tools, spec.max_steps, model_call, executor
+    )
     result["name"] = spec.name
     return result
 
@@ -203,8 +251,8 @@ def single_agent(
     executor: Callable[[str, dict[str, Any]], tuple[str, bool]] | None = None,
 ) -> dict[str, Any]:
     """Baseline: one agent, all tools, no delegation."""
-    # The control in the experiment: same task, same model, same budget
-    # shape, so any difference in the totals comes from delegation alone.
+    # The control in the experiment: same parent task, same model, same
+    # step budget, so any difference in the totals comes from delegation.
     started = time.perf_counter()
     result = _agent_run(
         task, SINGLE_AGENT_SYSTEM, all_tools, DEFAULT_MAX_STEPS, model_call, executor
@@ -229,7 +277,6 @@ def with_subagents(
             pool.submit(
                 run_subagent,
                 spec,
-                task,
                 all_tools,
                 model_call=model_call,
                 executor=executor,
@@ -262,6 +309,7 @@ def with_subagents(
         "steps": sum(r["steps"] for r in reports) + 1,
         "reports": reports,
         "seconds": time.perf_counter() - started,
+        "briefing": briefing,
     }
 
 
@@ -286,6 +334,7 @@ def compare(
             "total_tokens": single["usage"].total_tokens,
             "steps": single["steps"],
             "seconds": single["seconds"],
+            "stop_reason": single["stop_reason"],
         },
         "subagents": {
             "answer": delegated["answer"],
@@ -296,13 +345,9 @@ def compare(
     }
 
 
-def main() -> int:
-    """Run the same task both ways and print the totals side by side."""
-    task = (
-        "What is the return window, and how fast can an express order "
-        "arrive? Cite the note filenames."
-    )
-    specs = [
+def _demo_specs() -> list[SubagentSpec]:
+    """Two independent subtasks; both are read-only by construction."""
+    return [
         SubagentSpec(
             name="returns-reader",
             system=(
@@ -310,6 +355,10 @@ def main() -> int:
                 "you need and reply with a two sentence report."
             ),
             allowed_tools=["list_notes", "read_note"],
+            task=(
+                "What is the return window? Cite the note filename. "
+                "Do not discuss shipping."
+            ),
         ),
         SubagentSpec(
             name="shipping-reader",
@@ -318,8 +367,23 @@ def main() -> int:
                 "you need and reply with a two sentence report."
             ),
             allowed_tools=["list_notes", "read_note"],
+            task=(
+                "How fast can an express order arrive? Cite the note "
+                "filename. Do not discuss returns."
+            ),
         ),
     ]
+
+
+def main() -> int:
+    """Run the same task both ways and print the totals side by side."""
+    task = (
+        "What is the return window, and how fast can an express order "
+        "arrive? Cite the note filenames."
+    )
+    specs = _demo_specs()
+    assert "write_note" in {tool["name"] for tool in ALL_TOOLS}
+    assert all("write_note" not in spec.allowed_tools for spec in specs)
 
     result = compare(task, specs, ALL_TOOLS)
     for label in ("single", "subagents"):

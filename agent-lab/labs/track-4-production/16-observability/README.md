@@ -28,12 +28,12 @@ Keep the report as plain text. It works in a terminal, in CI output, and in a pu
 
 ## Steps
 
-1. Extend the `StepRecord` from `common/tracing.py` with whatever your runs need, keeping every field summable or sortable.
+1. Use `StepRecord` and `Trace` from `common/tracing.py` as the structured record. Add fields only if a run needs them, and keep every field summable or sortable.
 2. Implement `trace_step`: wrap any callable so it records name, duration, usage, and error without the caller writing bookkeeping at each site.
-3. Implement `attribute_cost`: convert per-step usage into per-step dollars with `common/cost.py`, and verify the parts sum to the whole.
+3. Implement `attribute_cost`: convert per-step usage into per-step dollars with `common/cost.py`, sum steps that share a name, and verify the parts sum to the whole.
 4. Implement `slowest_steps` and `costliest_steps`: return the top n by each measure, since they are usually different steps.
-5. Implement `render_report`: one line per step with duration, tokens, and cost, then totals, then the two top-n lists.
-6. Run an orchestrator from lab 05 under the trace and identify the single step that dominates the bill.
+5. Implement `render_report`: one line per step with duration, tokens, cost, and error note, then totals, then the two top-n lists.
+6. Simulate an orchestrator-style run under the trace (plan, workers, synthesize, one failure), print the report, and identify the single step that dominates the bill. The same wrapper is what you would put around a real lab 05 orchestrator.
 
 ## Verification
 
@@ -41,7 +41,7 @@ Keep the report as plain text. It works in a terminal, in CI output, and in a pu
 pytest labs/track-4-production/16-observability/tests -v
 ```
 
-Tracing and attribution are pure bookkeeping and are tested offline. Passing means each step is recorded exactly once, a step that raised is still recorded with its error and its usage, per-step costs sum to the run total, and the report names every step so nothing is silently missing.
+Tracing and attribution are pure bookkeeping and are tested offline. Passing means each step is recorded exactly once with its token usage copied from the response, a step that raised is still recorded with its error (and that error appears in the report), per-step costs sum to the run total including when two steps share a name, slowest and costliest can disagree, and the report names every step plus both top-n sections so nothing is silently missing.
 
 ## Going further
 

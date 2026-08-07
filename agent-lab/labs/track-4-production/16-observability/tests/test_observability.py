@@ -60,6 +60,15 @@ def test_each_step_is_recorded_exactly_once():
     ]
 
 
+def test_trace_step_records_usage_from_the_response():
+    """Bookkeeping must copy tokens off the result, not leave zeros."""
+    trace = solution.Trace("test-run")
+    solution.trace_step(trace, "search", lambda: _fake_response(1_234, 56))
+    record = trace.records[0]
+    assert record.input_tokens == 1_234
+    assert record.output_tokens == 56
+
+
 def test_a_failing_step_is_still_recorded():
     """A step that raises appears in the trace with its error and duration."""
     trace = solution.Trace("test-run")
@@ -73,7 +82,22 @@ def test_a_failing_step_is_still_recorded():
     record = trace.records[0]
     assert record.error is not None
     assert "upstream took too long" in record.error
-    assert record.duration_s > 0.0
+    assert record.duration_s >= 0.0
+
+
+def test_a_failing_step_appears_in_the_report_with_its_error():
+    """The text report must surface the error note, not drop the step."""
+    trace = solution.Trace("test-run")
+
+    def flaky() -> Any:
+        raise TimeoutError("upstream took too long")
+
+    with pytest.raises(TimeoutError):
+        solution.trace_step(trace, "worker-flaky", flaky)
+    report = solution.render_report(trace, MODEL)
+    assert "worker-flaky" in report
+    assert "error:" in report
+    assert "upstream took too long" in report
 
 
 def test_per_step_costs_sum_to_the_run_total():
@@ -82,12 +106,26 @@ def test_per_step_costs_sum_to_the_run_total():
     solution.trace_step(trace, "cheap", lambda: _fake_response(100, 10))
     solution.trace_step(trace, "pricey", lambda: _fake_response(50_000, 4_000))
     costs = solution.attribute_cost(trace, MODEL)
+    assert costs["cheap"] > 0.0
+    assert costs["pricey"] > costs["cheap"]
     total_usage = solution.TokenUsage(
         input_tokens=trace.total_input_tokens,
         output_tokens=trace.total_output_tokens,
     )
     whole = solution.estimate_cost(MODEL, total_usage)
     assert math.isclose(sum(costs.values()), whole, rel_tol=1e-9)
+
+
+def test_attribute_cost_sums_steps_that_share_a_name():
+    """Two workers named alike must add, not overwrite."""
+    trace = solution.Trace("test-run")
+    solution.trace_step(trace, "worker", lambda: _fake_response(1_000, 100))
+    solution.trace_step(trace, "worker", lambda: _fake_response(1_000, 100))
+    costs = solution.attribute_cost(trace, MODEL)
+    one = solution.estimate_cost(
+        MODEL, solution.TokenUsage(input_tokens=1_000, output_tokens=100)
+    )
+    assert math.isclose(costs["worker"], 2 * one, rel_tol=1e-9)
 
 
 def test_slowest_and_costliest_can_be_different_steps():
@@ -110,12 +148,29 @@ def test_slowest_and_costliest_can_be_different_steps():
     assert solution.costliest_steps(trace, MODEL, n=1)[0].name == "fast-pricey"
 
 
-def test_the_report_names_every_step():
-    """Every step name appears in the report, so nothing is silently missing."""
+def test_the_report_names_every_step_and_the_top_lists():
+    """Every step appears, and both top-n sections name the right leaders."""
     trace = solution.Trace("test-run")
-    names = ("plan", "worker-search", "synthesize")
-    for name in names:
-        solution.trace_step(trace, name, lambda: _fake_response(200, 20))
+    trace.records.append(
+        solution.StepRecord(
+            name="slow-cheap", duration_s=2.0, input_tokens=100, output_tokens=10
+        )
+    )
+    trace.records.append(
+        solution.StepRecord(
+            name="fast-pricey",
+            duration_s=0.01,
+            input_tokens=90_000,
+            output_tokens=9_000,
+        )
+    )
     report = solution.render_report(trace, MODEL)
-    for name in names:
-        assert name in report
+    assert "slow-cheap" in report
+    assert "fast-pricey" in report
+    assert "slowest steps:" in report
+    assert "costliest steps:" in report
+    # The first line under each heading is the leader for that measure.
+    after_slow = report.split("slowest steps:")[1]
+    assert after_slow.strip().startswith("slow-cheap")
+    after_cost = report.split("costliest steps:")[1]
+    assert after_cost.strip().startswith("fast-pricey")

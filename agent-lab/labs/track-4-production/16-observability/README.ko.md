@@ -28,12 +28,12 @@ step 단위로 귀속시키세요. 그것이 조치를 취할 수 있는 수준�
 
 ## 단계
 
-1. `common/tracing.py`의 `StepRecord`를 여러분의 실행에 필요한 만큼 확장하되, 모든 필드가 합산 또는 정렬 가능하도록 유지하세요.
+1. `common/tracing.py`의 `StepRecord`와 `Trace`를 구조화된 기록으로 쓰세요. 실행에 필드가 더 필요하면 추가하되, 모든 필드가 합산 또는 정렬 가능하도록 유지하세요.
 2. `trace_step`을 구현하세요. 임의의 callable을 감싸서 호출 지점마다 기록 코드를 쓰지 않고도 이름, 소요 시간, usage, 에러를 기록하게 합니다.
-3. `attribute_cost`를 구현하세요. `common/cost.py`로 step별 usage를 step별 금액으로 변환하고, 부분의 합이 전체와 같은지 검증합니다.
+3. `attribute_cost`를 구현하세요. `common/cost.py`로 step별 usage를 step별 금액으로 변환하고, 같은 이름 step은 합산하며, 부분의 합이 전체와 같은지 검증합니다.
 4. `slowest_steps`와 `costliest_steps`를 구현하세요. 각 기준의 상위 n개를 반환하며, 보통 서로 다른 step입니다.
-5. `render_report`를 구현하세요. step마다 한 줄로 소요 시간, token, 비용을 보여 주고, 그다음 합계, 그다음 두 개의 상위 n 목록을 출력합니다.
-6. lab 05의 orchestrator를 trace 아래에서 실행하고, 비용을 지배하는 단일 step을 찾아내세요.
+5. `render_report`를 구현하세요. step마다 한 줄로 소요 시간, token, 비용, 에러 노트를 보여 주고, 그다음 합계, 그다음 두 개의 상위 n 목록을 출력합니다.
+6. orchestrator 형태 실행을 trace 아래에서 시뮬레이트하세요(plan, workers, synthesize, 실패 하나). 리포트를 출력하고 비용을 지배하는 단일 step을 찾아내세요. 같은 wrapper를 실제 lab 05 orchestrator에 감싸면 됩니다.
 
 ## 검증
 
@@ -41,7 +41,7 @@ step 단위로 귀속시키세요. 그것이 조치를 취할 수 있는 수준�
 pytest labs/track-4-production/16-observability/tests -v
 ```
 
-tracing과 귀속은 순수한 기록 작업이며 오프라인으로 테스트됩니다. 통과했다면 각 step이 정확히 한 번 기록되고, 예외가 발생한 step도 에러와 usage와 함께 기록되며, step별 비용의 합이 실행 총계와 같고, 리포트가 모든 step 이름을 담아 조용히 빠진 것이 없다는 뜻입니다.
+tracing과 귀속은 순수한 기록 작업이며 오프라인으로 테스트됩니다. 통과했다면 각 step이 응답에서 복사한 token usage와 함께 정확히 한 번 기록되고, 예외가 발생한 step도 에러와 함께 기록되며(그 에러가 리포트에도 나타나고), step별 비용의 합이 실행 총계와 같으며(같은 이름 step 합산 포함), 가장 느린 step과 가장 비싼 step이 다를 수 있고, 리포트가 모든 step 이름과 두 상위 n 섹션을 담아 조용히 빠진 것이 없다는 뜻입니다.
 
 ## 더 나아가기
 

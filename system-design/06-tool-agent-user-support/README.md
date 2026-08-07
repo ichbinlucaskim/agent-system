@@ -195,6 +195,10 @@ in case 01.
 **Lab exercises:** `14-human-in-the-loop`, `07-tool-design-aci`,
 `15-evaluation`, `12-agent-loop`.
 
+**Worked example:** `projects/support-desk` — a runnable returns/refund desk that
+keeps policy in retrieval and permission in the tool layer, with offline
+action-level eval.
+
 **Paper topics:** `07-evaluation`, `02-acting-and-tools`.
 
 **Other cases:** `01-terminal-coding-agent` for the permission machinery this

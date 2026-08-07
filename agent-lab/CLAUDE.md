@@ -16,7 +16,6 @@ the reference answer.
 lab/
 ├── common/     shared helpers imported by labs: client, tracing, cost, vectorstore
 ├── labs/       the nineteen labs, grouped by track
-├── capstone/   the end-to-end project brief
 └── docs/       glossary, certification mapping, reading list
 ```
 
@@ -68,7 +67,7 @@ Korean coinages for them. Code blocks and commands stay byte-identical between
 the two files.
 
 The same rule applies to `README.md` / `README.ko.md` at the repository root,
-in `capstone/`, and to `docs/glossary.md` / `docs/glossary.ko.md`.
+and to `docs/glossary.md` / `docs/glossary.ko.md`.
 
 ## Dependencies
 

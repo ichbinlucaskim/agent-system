@@ -176,6 +176,9 @@ case들에게 구체적으로 내놓을 것이 있는 유일한 지점입니다.
 **Lab exercises:** `14-human-in-the-loop`, `07-tool-design-aci`,
 `15-evaluation`, `12-agent-loop`.
 
+**Worked example:** `projects/support-desk` — policy는 retrieval에, 허가는 tool
+계층에 두고, 행동 단위 offline eval까지 갖춘 실행 가능한 반품·환불 데스크.
+
 **Paper topics:** `07-evaluation`, `02-acting-and-tools`.
 
 **다른 case:** 이 case가 그대로 재사용할 수 없는 permission 장치에 대해서는

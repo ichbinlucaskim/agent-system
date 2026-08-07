@@ -1,7 +1,7 @@
 # Agent systems lab
 
 agent system이 실제로 어떻게 만들어지는지 배우는 실습 중심 lab 과정입니다. lab
-열아홉 개, track 네 개, capstone 하나로 구성됩니다. 짧은 README를 읽고
+열아홉 개, track 네 개로 구성됩니다. 짧은 README를 읽고
 `starter/main.py`의 TODO를 채운 뒤 pytest로 결과를 확인합니다.
 
 모든 것이 로컬에서 실행됩니다. 필요한 계정은 Anthropic API key 하나뿐이고,
@@ -113,7 +113,6 @@ README, 시그니처와 TODO가 있는 `starter/main.py`, 참조 `solution/main.
 lab/
 ├── common/     공용 helper: client, tracing, cost, vectorstore
 ├── labs/       track별로 묶인 열아홉 개의 lab
-├── capstone/   end-to-end 프로젝트 과제
 └── docs/       glossary, 인증 시험 매핑, 읽을거리 목록,
                 lab-to-cloud 대응표
 ```

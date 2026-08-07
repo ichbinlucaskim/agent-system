@@ -1,7 +1,7 @@
 # Agent systems lab
 
 A hands-on lab course for learning how agent systems are actually built. Nineteen
-labs, four tracks, one capstone. You read a short README, fill in the TODOs in
+labs across four tracks. You read a short README, fill in the TODOs in
 `starter/main.py`, and check your work with pytest.
 
 Everything runs locally. The only account you need is an Anthropic API key, and
@@ -116,7 +116,6 @@ against, not the starting point.
 lab/
 ├── common/     shared helpers: client, tracing, cost, vectorstore
 ├── labs/       the nineteen labs, grouped by track
-├── capstone/   the end-to-end project brief
 └── docs/       glossary, certification mapping, reading list,
                 lab-to-cloud map
 ```

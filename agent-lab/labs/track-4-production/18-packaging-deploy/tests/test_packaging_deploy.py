@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import contextlib
 import importlib.util
+import inspect
 import json
 import sys
 import threading
@@ -63,6 +64,14 @@ def test_load_config_names_the_missing_variable(monkeypatch):
         solution.load_config()
 
 
+def test_load_config_rejects_a_non_integer_port(monkeypatch):
+    """A malformed AGENT_PORT fails at startup with the variable named."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    monkeypatch.setenv("AGENT_PORT", "not-a-number")
+    with pytest.raises(solution.ConfigError, match="AGENT_PORT"):
+        solution.load_config()
+
+
 def test_load_config_applies_defaults(monkeypatch):
     """Optional settings fall back to documented defaults, never None."""
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
@@ -72,6 +81,18 @@ def test_load_config_applies_defaults(monkeypatch):
     assert config.model == solution.DEFAULT_MODEL
     assert config.port == 8080
     assert config.max_question_chars == 2_000
+
+
+def test_the_module_docstring_lists_required_environment_variables():
+    """Step 6: operators can read which variables the process needs."""
+    doc = inspect.getdoc(solution) or ""
+    for name in (
+        "ANTHROPIC_API_KEY",
+        "LAB_MODEL",
+        "AGENT_PORT",
+        "AGENT_MAX_QUESTION_CHARS",
+    ):
+        assert name in doc
 
 
 def test_health_returns_200_without_an_api_key(monkeypatch):
@@ -101,6 +122,20 @@ def test_malformed_json_returns_400():
     assert "error" in body
 
 
+def test_a_body_without_question_returns_400():
+    """Valid JSON that omits 'question' is still a client error."""
+    with _serve(solution._echo_core) as base:
+        request = urllib.request.Request(
+            f"{base}/answer",
+            data=json.dumps({"nope": 1}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with pytest.raises(urllib.error.HTTPError) as excinfo:
+            urllib.request.urlopen(request, timeout=5)
+        assert excinfo.value.code == 400
+
+
 def test_the_cli_returns_a_non_zero_exit_code_on_failure(monkeypatch):
     """run_cli returns non-zero when the core raises, so automation can branch."""
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
@@ -112,17 +147,23 @@ def test_the_cli_returns_a_non_zero_exit_code_on_failure(monkeypatch):
     assert solution.run_cli(["will fail"]) == 1
 
 
+def test_the_cli_returns_two_when_configuration_is_missing(monkeypatch, capsys):
+    """Missing config is a distinct exit code and names the variable."""
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    assert solution.run_cli(["any question"]) == 2
+    err = capsys.readouterr().err
+    assert "ANTHROPIC_API_KEY" in err
+
+
 def test_both_entry_points_call_the_same_core(monkeypatch):
     """The CLI and the handler both reach answer, so the paths cannot drift."""
     core = solution.answer
-    # The handler's default core is the module's answer function.
     server = solution.AgentServer(solution.Config(api_key="test-key"))
     try:
         assert server.core is core
     finally:
         server.server_close()
 
-    # The CLI resolves the same module attribute at call time.
     calls: list[str] = []
 
     def recording_core(question: str, config: Any) -> dict[str, Any]:
@@ -133,3 +174,22 @@ def test_both_entry_points_call_the_same_core(monkeypatch):
     monkeypatch.setattr(solution, "answer", recording_core)
     assert solution.run_cli(["cli question"]) == 0
     assert calls == ["cli question"]
+
+
+def test_smoke_test_probes_health_malformed_and_valid(monkeypatch):
+    """smoke_test must actually exercise the three probes, not just return True."""
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    # Force the echo path so the valid POST never needs a live model.
+    assert solution.smoke_test(port=0) is True
+
+    # A broken health path must make the smoke test fail.
+    real_do_get = solution.AgentHandler.do_GET
+
+    def broken_health(self) -> None:
+        if self.path == "/health":
+            self._send_json(500, {"status": "down"})
+            return
+        real_do_get(self)
+
+    monkeypatch.setattr(solution.AgentHandler, "do_GET", broken_health)
+    assert solution.smoke_test(port=0) is False

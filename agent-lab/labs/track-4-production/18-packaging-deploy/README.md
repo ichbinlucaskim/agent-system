@@ -18,7 +18,7 @@ This lab is marked optional because it teaches packaging rather than agent desig
 
 Two entry points, one core. The CLI and the HTTP handler should both be thin adapters over the same function. When they are not, they drift, and the bug you fix in one comes back through the other a month later.
 
-Configuration comes from the environment, and it is validated at startup rather than at first use. A process that starts happily and fails on its first request an hour later is much harder to diagnose than one that refuses to start and says which variable is missing.
+Configuration comes from the environment, and it is validated at startup rather than at first use. A process that starts happily and fails on its first request an hour later is much harder to diagnose than one that refuses to start and says which variable is missing. `load_config` and the CLI refuse to start without `ANTHROPIC_API_KEY`. The smoke test may fall back to an echo core when no key is present so it can still prove HTTP plumbing offline — that fallback is for the lab harness, not for a real deployment.
 
 The HTTP handler here is `http.server`, which is not a production server and should not pretend to be one. It exists to show the shape: parse a request, call the core, serialize a response, return a status code that means something. Swapping in a real server later changes the adapter, not the agent.
 
@@ -33,7 +33,7 @@ A smoke test is the minimum honest deployment check: does the thing start, does 
 3. Implement `build_parser` and `run_cli`: parse arguments, call `answer`, print the result, and return a non-zero exit code on failure so a shell can branch on it.
 4. Implement `AgentHandler`: a `BaseHTTPRequestHandler` with a `/health` endpoint that touches no model and a POST endpoint that returns 400 on malformed input and 200 with a JSON body otherwise.
 5. Implement `smoke_test`: start the server, hit `/health`, post one malformed request and one valid one, and report a single pass or fail.
-6. Document the required environment variables in the module docstring, and confirm the process refuses to start without them.
+6. Document the required environment variables in the module docstring, and confirm `load_config` / the CLI refuse to start without them. (Smoke may use an echo core offline; that does not relax startup validation for the real process.)
 
 ## Verification
 
@@ -41,7 +41,7 @@ A smoke test is the minimum honest deployment check: does the thing start, does 
 pytest labs/track-4-production/18-packaging-deploy/tests -v
 ```
 
-Configuration, argument parsing, and HTTP status handling are tested offline. Passing means a missing required variable is reported by name at startup, `/health` returns 200 with no API key set, malformed JSON returns 400 rather than a traceback, the CLI returns a non-zero exit code on failure, and both entry points call the same core function.
+Configuration, argument parsing, HTTP status handling, and the smoke test are tested offline. Passing means a missing required variable is reported by name at startup, a malformed `AGENT_PORT` is rejected, `/health` returns 200 with no API key set and without calling the core, malformed JSON and a body missing `question` return 400 rather than a traceback, the CLI returns exit code 1 on core failure and 2 on config failure, both entry points call the same core function, the module docstring lists the environment variables, and `smoke_test` actually probes health / malformed / valid (failing when health is broken).
 
 ## Going further
 

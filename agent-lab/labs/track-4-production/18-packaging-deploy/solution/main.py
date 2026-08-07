@@ -5,7 +5,7 @@ environment and is validated at startup, the health check never touches the
 model, and a smoke test proves the process starts and answers.
 
 Environment variables:
-    ANTHROPIC_API_KEY           required; the process refuses to start without it
+    ANTHROPIC_API_KEY           required; load_config and the CLI refuse to start without it
     LAB_MODEL                   optional; model id, defaults to the lab default
     AGENT_PORT                  optional; HTTP port, defaults to 8080
     AGENT_MAX_QUESTION_CHARS    optional; input length cap, defaults to 2000
@@ -222,13 +222,14 @@ def smoke_test(port: int = 0) -> bool:
     Three probes: health, one malformed request, one valid request. This
     proves the thing starts and answers; lab 15 is what proves it is any
     good, and confusing the two leaves a green pipeline in front of a wrong
-    agent.
+    agent. Any probe error is a failed smoke, not an uncaught exception.
     """
     try:
         config, core = load_config(), answer
     except ConfigError:
         # No key in the environment: exercise the full HTTP path with an
-        # echo core instead of touching the model.
+        # echo core instead of touching the model. Real deployments still
+        # refuse via load_config / run_cli; this path is for offline plumbing.
         config, core = Config(api_key=""), _echo_core
 
     server = AgentServer(config, core=core, port=port)
@@ -237,8 +238,13 @@ def smoke_test(port: int = 0) -> bool:
     base = f"http://127.0.0.1:{server.server_address[1]}"
     checks: list[bool] = []
     try:
-        with urllib.request.urlopen(f"{base}/health", timeout=5) as response:
-            checks.append(response.status == 200)
+        try:
+            with urllib.request.urlopen(f"{base}/health", timeout=5) as response:
+                checks.append(response.status == 200)
+        except urllib.error.HTTPError as exc:
+            checks.append(exc.code == 200)
+        except OSError:
+            checks.append(False)
 
         malformed = urllib.request.Request(
             f"{base}/answer", data=b"not json", method="POST"
@@ -248,6 +254,8 @@ def smoke_test(port: int = 0) -> bool:
             checks.append(False)
         except urllib.error.HTTPError as exc:
             checks.append(exc.code == 400)
+        except OSError:
+            checks.append(False)
 
         valid = urllib.request.Request(
             f"{base}/answer",
@@ -255,14 +263,17 @@ def smoke_test(port: int = 0) -> bool:
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(valid, timeout=30) as response:
-            body = json.loads(response.read())
-            checks.append(response.status == 200 and "answer" in body)
+        try:
+            with urllib.request.urlopen(valid, timeout=30) as response:
+                body = json.loads(response.read())
+                checks.append(response.status == 200 and "answer" in body)
+        except (urllib.error.HTTPError, OSError, json.JSONDecodeError):
+            checks.append(False)
     finally:
         server.shutdown()
         server.server_close()
         thread.join(timeout=5)
-    return all(checks)
+    return bool(checks) and all(checks)
 
 
 def main() -> int:

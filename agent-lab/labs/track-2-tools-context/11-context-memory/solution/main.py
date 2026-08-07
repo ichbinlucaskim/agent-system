@@ -76,26 +76,38 @@ def _tier(message: dict[str, Any]) -> str:
 
 def budget_messages(messages: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
     """Drop by tier, oldest first within a tier, protecting anchors."""
-    kept = list(messages)
+    over = total_tokens(messages) - limit
+    if over <= 0:
+        return list(messages)
 
-    # Raw turns first, then the compressed tiers, and finally anything whose
-    # tier this function does not recognise. The last pass exists so that no
-    # non-anchor message can become immortal through a typo in its tier.
-    for tier in (*DROP_ORDER, None):
-        while total_tokens(kept) > limit:
-            for index, message in enumerate(kept):
-                if message.get("anchor"):
-                    continue
-                if tier is None or _tier(message) == tier:
-                    del kept[index]
-                    break
-            else:
-                break
+    def sacrifice_order(entry: tuple[int, dict[str, Any]]) -> tuple[int, int]:
+        """Rank one message by what it costs to lose: tier first, then age."""
+        index, message = entry
+        tier = _tier(message)
+        # A tier this function does not recognise sorts last rather than
+        # being skipped, so a typo in a tier name cannot pin a message in the
+        # window forever.
+        rank = DROP_ORDER.index(tier) if tier in DROP_ORDER else len(DROP_ORDER)
+        return rank, index
+
+    # Raw turns before the compressed tiers, oldest first within a tier. The
+    # whole policy is this sort key, so it is worth reading as one.
+    droppable = sorted(
+        ((index, message) for index, message in enumerate(messages) if not message.get("anchor")),
+        key=sacrifice_order,
+    )
+
+    doomed: set[int] = set()
+    for index, message in droppable:
+        if over <= 0:
+            break
+        doomed.add(index)
+        over -= _message_tokens(message)
 
     # If the anchors alone exceed the limit, exceeding it is the lesser
     # failure: silently dropping the system prompt or the task statement looks
     # like the model getting worse for no reason.
-    return kept
+    return [message for index, message in enumerate(messages) if index not in doomed]
 
 
 def compact(

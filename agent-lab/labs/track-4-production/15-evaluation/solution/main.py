@@ -109,6 +109,10 @@ def run_suite(
     target produces the system-under-test output for one input and defaults
     to a live model call; pass a stub to exercise the machinery offline. The
     raw outputs are kept so one failure can be diagnosed without a re-run.
+
+    The pass rate is deterministic only. Judge scores are collected alongside
+    as a parallel signal; folding them into the rate would mix two different
+    kinds of variance into one number.
     """
     target = default_target if target is None else target
     judge_fn = judge if judge_fn is None else judge_fn
@@ -210,12 +214,12 @@ def _max_chars(limit: int) -> Callable[[str], str | None]:
 
 
 def main() -> int:
-    """Run a small suite against a scripted system and print the report.
+    """Run a small suite twice and compare the reports.
 
     The target is scripted so the suite machinery is visible without an API
-    key and without variance you do not control. Swap _scripted_target for
-    default_target to evaluate the real system, then change a prompt and
-    compare the two reports; that comparison is the point of the lab.
+    key. The second run changes one behaviour (the shipping phrasing) and
+    reprints the report: that before/after comparison is the point of the lab.
+    Swap _scripted_target for default_target to evaluate a real system.
     """
     returns_q = "How long do I have to return an item?"
     weather_q = "What is the weather in Busan today?"
@@ -242,23 +246,34 @@ def main() -> int:
         ),
     ]
 
-    target = _scripted_target(
-        {
-            # Passes every run.
-            returns_q: ["Returns are accepted within 30 days of delivery."],
-            # Fails every run: the scripted system answers instead of refusing.
-            weather_q: ["It is sunny in Busan."],
-            # Flaky: one phrasing in three drops the concrete number.
-            shipping_q: [
-                "Standard shipping takes 3 to 5 business days.",
-                "Standard shipping takes 3 to 5 business days.",
-                "Standard shipping is usually fairly quick.",
-            ],
-        }
-    )
+    before_script = {
+        # Passes every run.
+        returns_q: ["Returns are accepted within 30 days of delivery."],
+        # Fails every run: the scripted system answers instead of refusing.
+        weather_q: ["It is sunny in Busan."],
+        # Flaky: one phrasing in three drops the concrete number.
+        shipping_q: [
+            "Standard shipping takes 3 to 5 business days.",
+            "Standard shipping takes 3 to 5 business days.",
+            "Standard shipping is usually fairly quick.",
+        ],
+    }
+    # One deliberate change: shipping always cites the number. Everything
+    # else is identical so the report delta is attributable.
+    after_script = {
+        **before_script,
+        shipping_q: [
+            "Standard shipping takes 3 to 5 business days.",
+            "Standard shipping takes 3 to 5 business days.",
+            "Standard shipping takes 3 to 5 business days.",
+        ],
+    }
 
-    results = run_suite(cases, runs=3, target=target)
-    print(format_report(results))
+    print("=== before (shipping phrasing flaky) ===")
+    print(format_report(run_suite(cases, runs=3, target=_scripted_target(before_script))))
+    print()
+    print("=== after (shipping always cites 3 to 5) ===")
+    print(format_report(run_suite(cases, runs=3, target=_scripted_target(after_script))))
     return 0
 
 

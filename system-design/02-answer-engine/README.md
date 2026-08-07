@@ -225,6 +225,9 @@ the only part that should be treated as a lesson.
 **Lab exercises:** `08-rag-basics`, `09-retrieval-quality`, `03-routing`,
 `02-prompt-chaining`.
 
+**Worked example:** `projects/answer-engine` — a pure workflow with hybrid
+retrieval, staged rerank, cite-before-generation, and grounding eval.
+
 **Paper topics:** `04-memory-and-retrieval`, `07-evaluation`.
 
 **Other cases:** `01-terminal-coding-agent` is the inversion this case is

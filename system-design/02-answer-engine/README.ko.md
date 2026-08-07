@@ -199,6 +199,9 @@ synthesis라는 그 형태가 둘이 동의하는 부분이며 교훈으로 다�
 **Lab exercises:** `08-rag-basics`, `09-retrieval-quality`, `03-routing`,
 `02-prompt-chaining`.
 
+**Worked example:** `projects/answer-engine` — hybrid retrieval, staged rerank,
+cite-before-generation, grounding eval을 갖춘 순수 workflow.
+
 **Paper topics:** `04-memory-and-retrieval`, `07-evaluation`.
 
 **다른 case:** `01-terminal-coding-agent`가 이 case와 짝을 이루는 반전입니다.

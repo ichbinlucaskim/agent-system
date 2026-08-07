@@ -83,9 +83,9 @@ lab은 무엇이 지켜져야 하는지를 정합니다. library는 그것을 �
 만들지를 돕습니다. cloud는 어디서 돌리고, 상태를 두고, 관측할지의 실행
 환경입니다.
 
-## Worked example
+## Worked examples
 
-`projects/support-desk`는 system-design case 06을 작은 반품·환불 데스크로
-구현합니다. routing, policy RAG, 예산 있는 agent loop, HITL, tool 계층
-policy 강제, 행동 단위 eval, packaging이 한곳에 있습니다. lab을 마친 뒤
-full pipeline을 한곳에서 보고 싶을 때 돌리세요.
+- `projects/support-desk` (case 06): 계정 행동 가지에만 제한된 agent loop가 있는
+  workflow. 실패 모드는 잘못된 부작용.
+- `projects/answer-engine` (case 02): 순수 read-only workflow. 실패 모드는 증거를
+  앞지르는 유창한 답. citation은 generation 전에 붙습니다.

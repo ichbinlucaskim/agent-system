@@ -83,9 +83,10 @@ belong in your code.
 Labs decide what must stay true. Libraries speed up how you build it. Cloud is
 where it runs, stores state, and gets observed.
 
-## Worked example
+## Worked examples
 
-`projects/support-desk` implements system-design case 06 as a small returns desk:
-routing, policy RAG, an agent loop with budgets, HITL, tool-layer policy
-enforcement, action-level eval, and packaging. Run it after the labs when you
-want the full pipeline in one place.
+- `projects/support-desk` (case 06): workflow shell with a bounded agent loop on
+  account actions; failure mode is a wrong side effect.
+- `projects/answer-engine` (case 02): pure read-only workflow; failure mode is a
+  fluent answer that outruns its evidence. Citations are embedded before
+  generation.

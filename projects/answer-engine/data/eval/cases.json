@@ -1,0 +1,57 @@
+[
+  {
+    "id": "workflow_def",
+    "question": "What is the difference between a workflow and an agent?",
+    "intent": "comparison",
+    "relevant_docs": ["workflow-vs-agent"],
+    "answer_must_contain_any": ["workflow", "agent"],
+    "must_cite_docs": ["workflow-vs-agent"]
+  },
+  {
+    "id": "grounding_failure",
+    "question": "What is the characteristic failure of an answer engine?",
+    "intent": "factual",
+    "relevant_docs": ["grounding"],
+    "answer_must_contain_any": ["evidence", "fluent"],
+    "must_cite_docs": ["grounding"]
+  },
+  {
+    "id": "hybrid_why",
+    "question": "Why combine keyword search with dense embeddings?",
+    "intent": "factual",
+    "relevant_docs": ["hybrid-retrieval"],
+    "answer_must_contain_any": ["keyword", "dense"],
+    "must_cite_docs": ["hybrid-retrieval"]
+  },
+  {
+    "id": "cite_before",
+    "question": "When should citations be embedded relative to generation?",
+    "intent": "factual",
+    "relevant_docs": ["grounding", "prompt-assembly"],
+    "answer_must_contain_any": ["before"],
+    "must_cite_docs": ["prompt-assembly"]
+  },
+  {
+    "id": "latency_no_loop",
+    "question": "Why does an answer engine often skip a verification loop after generation?",
+    "intent": "factual",
+    "relevant_docs": ["latency-budget"],
+    "answer_must_contain_any": ["latency", "budget"],
+    "must_cite_docs": ["latency-budget"]
+  },
+  {
+    "id": "rerank_shape",
+    "question": "What is staged reranking and why use a quality threshold?",
+    "intent": "factual",
+    "relevant_docs": ["reranking"],
+    "answer_must_contain_any": ["staged", "threshold"],
+    "must_cite_docs": ["reranking"]
+  },
+  {
+    "id": "out_of_corpus",
+    "question": "What is the capital of Mars colony Zephyr-9?",
+    "intent": "factual",
+    "relevant_docs": [],
+    "expect_abstain": true
+  }
+]

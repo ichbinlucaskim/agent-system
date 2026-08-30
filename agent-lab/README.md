@@ -113,7 +113,7 @@ against, not the starting point.
 ## Repository layout
 
 ```
-lab/
+agent-lab/
 ├── common/     shared helpers: client, tracing, cost, vectorstore
 ├── labs/       the nineteen labs, grouped by track
 └── docs/       glossary, certification mapping, reading list,

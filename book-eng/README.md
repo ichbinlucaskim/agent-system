@@ -40,6 +40,6 @@ Feedback from engineers and researchers is welcome. Three things in particular.
 
 ## Edition
 
-First edition, August 2026. This is the English edition. The Korean edition is the original.
+First edition, August 2026. This is the English edition. The Korean edition is the original and is in `../book-kor/`.
 
 This field moves fast. Details of a specific product or specification are as of this edition.

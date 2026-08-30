@@ -110,7 +110,7 @@ README, 시그니처와 TODO가 있는 `starter/main.py`, 참조 `solution/main.
 ## 저장소 구조
 
 ```
-lab/
+agent-lab/
 ├── common/     공용 helper: client, tracing, cost, vectorstore
 ├── labs/       track별로 묶인 열아홉 개의 lab
 └── docs/       glossary, 인증 시험 매핑, 읽을거리 목록,
